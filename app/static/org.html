@@ -1,0 +1,607 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Organização - Membros</title>
+    <link rel="stylesheet" href="/app/styles.css?v=2" />
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-slate-50 text-slate-800">
+    <div class="flex min-h-screen">
+      <aside class="w-72 bg-slate-900 text-slate-100 flex flex-col">
+        <div class="p-5 flex items-center gap-3 border-b border-slate-800">
+          <img src="/app/Nexen.ai.png" alt="Logo" class="w-8 h-8 object-contain rounded" />
+          <div>
+            <div class="text-lg font-semibold">Nexen.ai</div>
+            <div class="text-xs text-slate-400">Analytics Platform</div>
+          </div>
+        </div>
+        <nav class="p-3 flex-1">
+          
+<ul class="space-y-1 text-sm">
+  <li><a class="nav-item" href="/app/index2.html"><img src="/app/dashboardlogo.png" alt="" class="nav-icon" />Dashboard</a></li>
+  <li><a class="nav-item" href="/app/datasources-fixed.html"><img src="/app/fontededados.png" alt="" class="nav-icon" />Fontes de Dados</a></li>
+  <li><a class="nav-item" href="/app/datasets-fixed.html"><img src="/app/conjuntodedados.png" alt="" class="nav-icon" />Conjuntos de Dados</a></li>
+  <li><a class="nav-item" href="/app/indicators-fixed.html"><img src="/app/indicadores.png" alt="" class="nav-icon" />Indicadores</a></li>
+</ul>
+<div class="mt-6 text-xs uppercase tracking-wide text-slate-400">Configuracao</div>
+<ul class="mt-2 space-y-1 text-sm">
+  <li><a class="nav-item active" href="/app/org.html"><img src="/app/organizacao.png" alt="" class="nav-icon" />Organizacao</a></li>
+  <li><a class="nav-item" href="#"><img src="/app/configuracao.png" alt="" class="nav-icon" />Configuracoes</a></li>
+</ul>
+
+        </nav>
+        <div class="p-4 text-xs text-slate-400">v0.1.0</div>
+      </aside>
+
+      <main class="flex-1">
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6">
+          <div class="text-3xl font-extrabold">Organização</div>
+          <div class="flex items-center gap-4">
+            <a id="btnLogin" href="/app/login.html" class="btn hidden">Entrar</a>
+            <div id="profileArea" class="relative hidden">
+              <div id="avatar" class="w-9 h-9 rounded-full bg-indigo-500 text-white grid place-items-center text-sm font-bold cursor-pointer select-none">NX</div>
+              <div id="profileMenu" class="profile-menu hidden">
+                <button id="actionTheme"><span id="themeLabel">Modo noturno</span><span class="theme-badge" id="themeBadge">Desligado</span></button>
+                <button id="actionLogout">Sair</button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <section class="p-6 space-y-6">
+          <div class="panel flex items-center justify-between">
+            <div class="text-sm text-slate-500">
+              Código da organização (slug):
+              <span id="orgSlug" class="font-mono font-semibold text-slate-800">—</span>
+            </div>
+            <button id="btnCopy" class="btn">Copiar</button>
+          </div>
+
+          <div class="panel space-y-4">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <div class="text-xl font-semibold">Membros e permissões</div>
+                <div class="text-slate-500 text-sm">
+                  Crie usuários internos, defina o nível de acesso e escolha quais pastas de indicadores eles podem enxergar/editar.
+                </div>
+              </div>
+              <button id="btnOpenModal" class="btn-primary">Adicionar membro</button>
+            </div>
+            <div class="overflow-auto">
+              <table class="min-w-full text-sm border border-slate-200 rounded-lg overflow-hidden">
+                <thead class="bg-slate-100 text-slate-600">
+                  <tr>
+                    <th class="text-left p-3">Nome</th>
+                    <th class="text-left p-3">Email</th>
+                    <th class="text-left p-3">Papel</th>
+                    <th class="text-left p-3">Acessos</th>
+                    <th class="text-right p-3">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="memberBody"></tbody>
+              </table>
+              <div id="membersEmpty" class="text-sm text-slate-500 text-center py-6 hidden">Nenhum colaborador cadastrado ainda.</div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Modal -->
+    <div id="memberModal" class="modal-backdrop">
+      <div class="modal" style="width:min(900px, 95vw)">
+        <div class="modal-header">
+          <div id="modalTitle" class="font-semibold">Novo membro</div>
+          <button id="btnCloseModal" class="btn">×</button>
+        </div>
+        <div class="modal-body">
+          <form id="memberForm" class="space-y-4">
+            <div class="grid md:grid-cols-2 gap-4">
+              <div>
+                <label class="text-sm font-medium text-slate-600">Nome</label>
+                <input id="memberName" class="w-full border rounded p-2" placeholder="Nome completo" />
+              </div>
+              <div>
+                <label class="text-sm font-medium text-slate-600">Email</label>
+                <input id="memberEmail" type="email" class="w-full border rounded p-2" placeholder="email@empresa.com" />
+              </div>
+            </div>
+            <div id="rowPassword">
+              <label id="passwordLabel" class="text-sm font-medium text-slate-600">Senha inicial</label>
+              <input id="memberPassword" type="password" class="w-full border rounded p-2" placeholder="Defina uma senha temporária" />
+              <div id="passwordHelp" class="text-xs text-slate-500 mt-1">O usuário poderá trocar essa senha depois de entrar.</div>
+            </div>
+            <div class="grid md:grid-cols-2 gap-4">
+              <div>
+                <label class="text-sm font-medium text-slate-600">Papel</label>
+                <select id="memberRole" class="w-full border rounded p-2">
+                  <option value="Viewer">Viewer (somente leitura)</option>
+                  <option value="Editor">Editor</option>
+                  <option value="Admin">Admin</option>
+                  <option value="Owner">Owner</option>
+                </select>
+              </div>
+              <div class="grid grid-cols-1 gap-2 text-sm mt-2 md:mt-0">
+                <label class="flex items-center gap-2"><input type="checkbox" id="permSources" />Pode editar fontes de dados</label>
+                <label class="flex items-center gap-2"><input type="checkbox" id="permDatasets" />Pode editar conjuntos de dados</label>
+                <label class="flex items-center gap-2"><input type="checkbox" id="permIndicators" />Pode editar indicadores</label>
+                <label class="flex items-center gap-2"><input type="checkbox" id="permMembers" />Pode gerenciar membros</label>
+              </div>
+            </div>
+            <div>
+              <div class="flex items-center justify-between">
+                <div class="text-sm font-semibold text-slate-600">Pastas de indicadores</div>
+                <div class="flex gap-2">
+                  <input id="newFolderInput" class="border rounded p-2 text-sm" placeholder="Adicionar pasta manualmente" />
+                  <button type="button" id="btnAddFolder" class="btn text-sm">Adicionar</button>
+                </div>
+              </div>
+              <div id="folderList" class="mt-3 space-y-2 text-sm"></div>
+              <div class="text-xs text-slate-500 mt-2">Selecione as pastas que o usuário pode visualizar. Marque “Pode editar” para permitir alterações nos indicadores daquela pasta.</div>
+            </div>
+            <div class="flex items-center justify-between gap-3 pt-2">
+              <div id="formMsg" class="text-sm"></div>
+              <div class="flex gap-2">
+                <button type="button" class="btn" id="btnCancelModal">Cancelar</button>
+                <button type="submit" class="btn-primary" id="btnSubmitMember">Salvar</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script src="/app/theme.js"></script>
+    <script>
+      const api = (p) => `${location.origin}${p}`;
+      const token = () => localStorage.getItem('token') || '';
+      const authHeaders = (extra={}) => Object.assign({}, extra, token() ? { Authorization: `Bearer ${token()}` } : {});
+
+      const profileArea = document.getElementById('profileArea');
+      const avatarEl = document.getElementById('avatar');
+      const profileMenu = document.getElementById('profileMenu');
+      const themeBadge = document.getElementById('themeBadge');
+      const themeLabel = document.getElementById('themeLabel');
+
+      function showAuthButtons(){
+        const has = !!token();
+        document.getElementById('btnLogin').classList.toggle('hidden', has);
+        if(profileArea){
+          profileArea.classList.toggle('hidden', !has);
+          if(!has){
+            closeProfileMenu();
+            avatarEl.textContent = 'NX';
+            avatarEl.removeAttribute('title');
+          }
+        }
+      }
+
+      function initialsFrom(text){
+        if(!text) return 'NX';
+        const parts = text.trim().split(/\s+/).filter(Boolean);
+        if(parts.length === 0) return 'NX';
+        if(parts.length === 1) return parts[0].slice(0,2).toUpperCase();
+        return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+      }
+
+      async function updateAvatar(){
+        if(!avatarEl) return;
+        if(!token()){
+          avatarEl.textContent = 'NX';
+          avatarEl.removeAttribute('title');
+          return;
+        }
+        try {
+          const resp = await fetch(api('/auth/me'), { headers: authHeaders() });
+          if(!resp.ok){
+            if(resp.status === 401) showAuthButtons();
+            return;
+          }
+          const data = await resp.json();
+          const label = data.name || data.email || '';
+          avatarEl.textContent = initialsFrom(label);
+          avatarEl.title = label;
+        } catch (err) {
+          console.error('avatar', err);
+        }
+      }
+
+      function closeProfileMenu(){ profileMenu?.classList.add('hidden'); }
+      function toggleProfileMenu(){ profileMenu?.classList.toggle('hidden'); }
+
+      function syncThemeUI(mode){
+        if(mode === 'dark'){
+          themeBadge?.classList.add('active');
+          if(themeBadge) themeBadge.textContent = 'Ligado';
+          if(themeLabel) themeLabel.textContent = 'Modo claro';
+        } else {
+          themeBadge?.classList.remove('active');
+          if(themeBadge) themeBadge.textContent = 'Desligado';
+          if(themeLabel) themeLabel.textContent = 'Modo noturno';
+        }
+      }
+
+      function initTheme(){
+        const mode = Theme.current();
+        Theme.apply(mode);
+        syncThemeUI(mode);
+      }
+
+      function toggleTheme(){
+        const mode = Theme.toggle();
+        syncThemeUI(mode);
+      }
+
+      document.getElementById('actionLogout')?.addEventListener('click', () => {
+        localStorage.removeItem('token');
+        closeProfileMenu();
+        showAuthButtons();
+        updateAvatar();
+        location.href = '/app/login.html?next=/app/org.html';
+      });
+      document.getElementById('actionTheme')?.addEventListener('click', () => toggleTheme());
+      avatarEl?.addEventListener('click', () => { if(token()) toggleProfileMenu(); });
+      document.addEventListener('click', (event) => {
+        if(!profileArea || profileArea.contains(event.target)) return;
+        closeProfileMenu();
+      });
+
+      initTheme();
+      showAuthButtons();
+      updateAvatar();
+
+      const orgSlugEl = document.getElementById('orgSlug');
+      const btnCopy = document.getElementById('btnCopy');
+      btnCopy.addEventListener('click', async () => {
+        const value = orgSlugEl.textContent || '';
+        try {
+          await navigator.clipboard.writeText(value);
+          alert('Slug copiado');
+        } catch {
+          alert('Não foi possível copiar automaticamente.');
+        }
+      });
+
+      const memberBody = document.getElementById('memberBody');
+      const membersEmpty = document.getElementById('membersEmpty');
+      const btnOpenModal = document.getElementById('btnOpenModal');
+      const memberModal = document.getElementById('memberModal');
+      const modalTitle = document.getElementById('modalTitle');
+      const memberForm = document.getElementById('memberForm');
+      const nameInput = document.getElementById('memberName');
+      const emailInput = document.getElementById('memberEmail');
+      const passwordRow = document.getElementById('rowPassword');
+      const passwordLabel = document.getElementById('passwordLabel');
+      const passwordHelp = document.getElementById('passwordHelp');
+      const passwordInput = document.getElementById('memberPassword');
+      const roleSelect = document.getElementById('memberRole');
+      const permSources = document.getElementById('permSources');
+      const permDatasets = document.getElementById('permDatasets');
+      const permIndicators = document.getElementById('permIndicators');
+      const permMembers = document.getElementById('permMembers');
+      const folderList = document.getElementById('folderList');
+      const newFolderInput = document.getElementById('newFolderInput');
+      const btnAddFolder = document.getElementById('btnAddFolder');
+      const btnCancelModal = document.getElementById('btnCancelModal');
+      const btnCloseModal = document.getElementById('btnCloseModal');
+      const formMsg = document.getElementById('formMsg');
+
+      let canManageMembers = false;
+      let myRole = 'Viewer';
+      let availableFolders = [''];
+      let membersCache = [];
+      let editingMemberId = null;
+
+      function folderLabel(value){
+        return value ? value : 'Sem pasta';
+      }
+
+      function renderMembers(){
+        memberBody.innerHTML = '';
+        if(!membersCache.length){
+          membersEmpty.classList.remove('hidden');
+          return;
+        }
+        membersEmpty.classList.add('hidden');
+        membersCache.forEach(member => {
+          const tr = document.createElement('tr');
+          tr.className = 'border-b border-slate-200 last:border-0';
+          const accessChips = [];
+          if(member.can_manage_datasources) accessChips.push('Fontes');
+          if(member.can_manage_datasets) accessChips.push('Datasets');
+          if(member.can_manage_indicators) accessChips.push('Indicadores');
+          if(member.can_manage_members) accessChips.push('Membros');
+          const folderChips = (member.indicator_folders || []).map(f => `${folderLabel(f.folder)}${f.can_edit ? ' ✎' : ''}`);
+          const allChips = [...accessChips, ...folderChips];
+          tr.innerHTML = `
+            <td class="p-3 align-top">${member.name || '-'}</td>
+            <td class="p-3 align-top">${member.email}</td>
+            <td class="p-3 align-top">${member.role || '-'}</td>
+            <td class="p-3 align-top">
+              ${allChips.length ? allChips.map(c => `<span class="inline-flex items-center px-2 py-0.5 text-xs rounded-full bg-slate-200 text-slate-700 mr-1 mb-1">${c}</span>`).join('') : '<span class="text-xs text-slate-400">Somente leitura</span>'}
+            </td>
+            <td class="p-3 align-top text-right space-x-2">
+              <button class="btn text-sm" data-action="edit">Editar</button>
+              <button class="btn text-sm text-rose-600 border-rose-200" data-action="remove">Remover</button>
+            </td>
+          `;
+          tr.querySelector('[data-action="edit"]').addEventListener('click', () => {
+            const roleLower = (myRole || '').toLowerCase();
+            if(!canManageMembers && !['owner','admin'].includes(roleLower)){
+              alert('Você não tem permissão para editar membros.');
+              return;
+            }
+            openModal(member);
+          });
+          tr.querySelector('[data-action="remove"]').addEventListener('click', async () => {
+            const roleLower = (myRole || '').toLowerCase();
+            if(!canManageMembers && !['owner','admin'].includes(roleLower)){
+              alert('Você não tem permissão para remover membros.');
+              return;
+            }
+            if(!confirm('Remover este membro?')) return;
+            try {
+              const resp = await fetch(api(`/org/members/${member.id}`), { method: 'DELETE', headers: authHeaders() });
+              if(resp.ok){
+                await loadMembers();
+              } else {
+                alert('Falha ao remover membro.');
+              }
+            } catch (err) {
+              alert('Falha ao remover membro.');
+            }
+          });
+          memberBody.appendChild(tr);
+        });
+      }
+
+      function renderFolderList(selected){
+        const map = new Map();
+        (selected || []).forEach(item => {
+          map.set(item.folder ?? '', { can_edit: !!item.can_edit });
+          if(!availableFolders.includes(item.folder ?? '')){
+            availableFolders.push(item.folder ?? '');
+          }
+        });
+        availableFolders = Array.from(new Set(availableFolders)).sort((a,b) => a.localeCompare(b));
+        folderList.innerHTML = '';
+        if(!availableFolders.length){
+          folderList.innerHTML = '<div class="text-xs text-slate-400">Nenhuma pasta encontrada. Crie indicadores para liberar pastas.</div>';
+          return;
+        }
+        availableFolders.forEach(folder => {
+          const selectedItem = map.get(folder ?? '') || { can_edit:false };
+          const row = document.createElement('div');
+          row.className = 'flex items-center gap-4 bg-slate-100 rounded px-3 py-2';
+          row.innerHTML = `
+            <label class="flex items-center gap-2">
+              <input type="checkbox" class="folder-check" data-folder="${folder ?? ''}" ${map.has(folder ?? '') ? 'checked' : ''} />
+              <span>${folderLabel(folder)}</span>
+            </label>
+            <label class="flex items-center gap-2 text-xs text-slate-600">
+              <input type="checkbox" class="folder-edit" data-folder-edit="${folder ?? ''}" ${selectedItem.can_edit ? 'checked' : ''} ${map.has(folder ?? '') ? '' : 'disabled'} />
+              Pode editar
+            </label>
+          `;
+          const mainCheck = row.querySelector('.folder-check');
+          const editCheck = row.querySelector('.folder-edit');
+          mainCheck.addEventListener('change', () => {
+            if(mainCheck.checked){
+              editCheck.disabled = false;
+            } else {
+              editCheck.disabled = true;
+              editCheck.checked = false;
+            }
+          });
+          folderList.appendChild(row);
+        });
+      }
+
+      function getSelectedFolders(){
+        const result = [];
+        folderList.querySelectorAll('.folder-check').forEach(input => {
+          if(input.checked){
+            const folder = input.dataset.folder || '';
+            const editInput = folderList.querySelector(`.folder-edit[data-folder-edit="${folder}"]`);
+            result.push({ folder, can_edit: editInput ? editInput.checked : false });
+          }
+        });
+        return result;
+      }
+
+      function resetForm(){
+        memberForm.reset();
+        editingMemberId = null;
+        formMsg.textContent = '';
+        emailInput.disabled = false;
+        passwordInput.value = '';
+        passwordRow.classList.remove('hidden');
+        passwordLabel.textContent = 'Senha inicial';
+        passwordHelp.textContent = 'O usuário poderá trocar essa senha depois de entrar.';
+        passwordInput.placeholder = 'Defina uma senha temporária';
+      }
+
+      function openModal(member){
+        memberModal.style.display = 'flex';
+        if(member){
+          modalTitle.textContent = 'Editar membro';
+          editingMemberId = member.id;
+          nameInput.value = member.name || '';
+          emailInput.value = member.email;
+          emailInput.disabled = true;
+          passwordRow.classList.remove('hidden');
+          passwordLabel.textContent = 'Nova senha (opcional)';
+          passwordHelp.textContent = 'Preencha apenas se quiser redefinir a senha deste usuário.';
+          passwordInput.placeholder = 'Deixe em branco para manter a senha atual';
+          passwordInput.value = '';
+          roleSelect.value = member.role || 'Viewer';
+          permSources.checked = !!member.can_manage_datasources;
+          permDatasets.checked = !!member.can_manage_datasets;
+          permIndicators.checked = !!member.can_manage_indicators;
+          permMembers.checked = !!member.can_manage_members;
+          renderFolderList(member.indicator_folders || []);
+        } else {
+          modalTitle.textContent = 'Novo membro';
+          editingMemberId = null;
+          resetForm();
+          renderFolderList([]);
+        }
+      }
+
+      function closeModal(){
+        memberModal.style.display = 'none';
+        resetForm();
+      }
+
+      btnOpenModal.addEventListener('click', () => {
+        if(!token()) { location.href = '/app/login.html?next=/app/org.html'; return; }
+        if(!canManageMembers){
+          alert('Você não tem permissão para gerenciar membros.');
+          return;
+        }
+        openModal(null);
+      });
+
+      btnCancelModal.addEventListener('click', () => closeModal());
+      btnCloseModal.addEventListener('click', () => closeModal());
+
+      btnAddFolder.addEventListener('click', () => {
+        const value = (newFolderInput.value || '').trim();
+        if(!value) return;
+        const current = getSelectedFolders();
+        current.push({ folder: value, can_edit: false });
+        availableFolders.push(value);
+        newFolderInput.value = '';
+        renderFolderList(current);
+      });
+
+      memberForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if(!canManageMembers){
+          formMsg.textContent = 'Você não tem permissão para alterar membros.';
+          formMsg.className = 'text-sm text-rose-600';
+          return;
+        }
+        const payload = {
+          role: roleSelect.value,
+          can_manage_datasources: permSources.checked,
+          can_manage_datasets: permDatasets.checked,
+          can_manage_indicators: permIndicators.checked,
+          can_manage_members: permMembers.checked,
+          indicator_folders: getSelectedFolders(),
+        };
+        const passwordValue = (passwordInput.value || '').trim();
+        let url = '/org/members';
+        let method = 'POST';
+        if(editingMemberId){
+          url = `/org/members/${editingMemberId}`;
+          method = 'PUT';
+          payload.name = nameInput.value.trim();
+          payload.password = passwordValue || undefined;
+        } else {
+          payload.name = nameInput.value.trim();
+          payload.email = emailInput.value.trim();
+          payload.password = passwordValue;
+          if(!payload.email){
+            formMsg.textContent = 'Informe um email válido.';
+            formMsg.className = 'text-sm text-rose-600';
+            return;
+          }
+          if(!passwordValue){
+            formMsg.textContent = 'Defina uma senha inicial para o usuário.';
+            formMsg.className = 'text-sm text-rose-600';
+            return;
+          }
+        }
+        if(method === 'PUT' && !payload.password){
+          delete payload.password;
+        }
+        try {
+          const resp = await fetch(api(url), {
+            method,
+            headers: authHeaders({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify(payload),
+          });
+          if(resp.ok){
+            closeModal();
+            await loadMembers();
+          } else {
+            const msg = await resp.text();
+            formMsg.textContent = msg || 'Não foi possível salvar o membro.';
+            formMsg.className = 'text-sm text-rose-600';
+          }
+        } catch (err) {
+          formMsg.textContent = 'Não foi possível salvar o membro.';
+          formMsg.className = 'text-sm text-rose-600';
+        }
+      });
+
+      async function loadOrgInfo(){
+        try {
+          const resp = await fetch(api('/org/info'), { headers: authHeaders() });
+          if(resp.ok){
+            const data = await resp.json();
+            orgSlugEl.textContent = data.slug || '—';
+            myRole = data.role || 'Viewer';
+            canManageMembers = !!data.can_manage_members;
+          }
+        } catch (err) {
+          console.error('org/info', err);
+        }
+      }
+
+      async function loadIndicatorFolders(){
+        try {
+          const resp = await fetch(api('/org/indicator-folders'), { headers: authHeaders() });
+          if(resp.ok){
+            const data = await resp.json();
+            const foldersRaw = Array.isArray(data.folders) ? data.folders : [];
+            const normalized = foldersRaw.map(f => (f || ''));
+            availableFolders = Array.from(new Set(['', ...normalized])).sort((a,b) => a.localeCompare(b));
+          }
+        } catch (err) {
+          console.error('indicator folders', err);
+        }
+      }
+
+      async function loadMembers(){
+        if(!token()) return;
+        try {
+          const resp = await fetch(api('/org/members'), { headers: authHeaders() });
+          if(!resp.ok){
+            membersCache = [];
+          } else {
+            membersCache = await resp.json();
+          }
+        } catch (err) {
+          membersCache = [];
+          console.error('members', err);
+        }
+        membersCache.forEach(member => {
+          (member.indicator_folders || []).forEach(f => {
+            if(!availableFolders.includes(f.folder ?? '')){
+              availableFolders.push(f.folder ?? '');
+            }
+          });
+        });
+        availableFolders = Array.from(new Set(availableFolders)).sort((a,b) => a.localeCompare(b));
+        renderMembers();
+      }
+
+      async function bootstrap(){
+        if(!token()){
+          showAuthButtons();
+          return;
+        }
+        showAuthButtons();
+        await loadOrgInfo();
+        await loadIndicatorFolders();
+        await loadMembers();
+      }
+
+      bootstrap();
+    </script>
+  </body>
+</html>

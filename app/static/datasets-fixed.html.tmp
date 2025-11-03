@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nexen.ai — Conjuntos de Dados</title>
+    <link rel="stylesheet" href="/app/styles.css?v=2" />
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-slate-50 text-slate-800">
+    <div class="flex min-h-screen">
+      <aside class="w-72 bg-slate-900 text-slate-100 flex flex-col">
+        <div class="p-5 flex items-center gap-3 border-b border-slate-800">
+          <div class="rounded-lg">
+            <img src="/app/Nexen.ai.png" alt="Logo" class="w-8 h-8 object-contain rounded" />
+          </div>
+          <div>
+            <div class="text-lg font-semibold">Nexen.ai</div>
+            <div class="text-xs text-slate-400">Analytics Platform</div>
+          </div>
+        </div>
+        <nav class="p-3 flex-1">
+          <ul class="space-y-1 text-sm">
+            <li><a class="nav-item" href="/app/">Dashboard</a></li>
+            <li><a class="nav-item" href="/app/datasources-fixed.html">Fontes de Dados</a></li>
+            <li><a class="nav-item active" href="/app/datasets-fixed.html">Conjuntos de Dados</a></li>
+            <li><a class="nav-item" href="/app/indicators-fixed.html">Indicadores</a></li>
+          </ul>
+          <div class="mt-6 text-xs uppercase tracking-wide text-slate-400">Configuração</div>
+          <ul class="mt-2 space-y-1 text-sm">
+            <li><a class="nav-item" href="#">Organização</a></li>
+            <li><a class="nav-item" href="#">Settings</a></li>
+          </ul>
+        </nav>
+        <div class="p-4 text-xs text-slate-400">v0.1.0</div>
+      </aside>
+
+      <main class="flex-1">
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6">
+          <div class="text-3xl font-extrabold">Conjuntos de Dados</div>
+          <div class="flex items-center gap-3">
+            <button id="btnCreate" class="btn-primary flex items-center gap-2">+<span>Criar Dataset</span></button>
+            <a id="btnLogin" href="/app/login.html" class="btn hidden">Entrar</a>
+            <button id="btnLogout" class="btn hidden">Sair</button>
+          </div>
+        </header>
+
+        <section class="p-6">
+          <div class="flex items-center justify-between">
+            <p class="text-slate-600">Transforme e curate seus dados para análise</p>
+            <div class="flex gap-2">
+              <input id="dsCredorFilter" class="border rounded p-2 text-sm" placeholder="Código da Fonte de Dados" style="width:200px" />
+              <button id="btnPreviewCols" class="btn">Prévia das Colunas</button>
+              <button id="btnClearTenant" class="btn text-rose-600 border-rose-200">Limpar Dados do Tenant</button>
+            </div>
+          </div>
+          <div id="previewBox" class="hidden mt-4 border border-slate-200 rounded-xl bg-white p-4">
+            <div class="text-sm text-slate-600 mb-2">Colunas do curated (amostra)</div>
+            <div id="colsChips" class="flex flex-wrap gap-2 mb-3"></div>
+            <div class="text-sm text-slate-600">Amostra de linhas</div>
+            <pre id="sampleOut" class="mt-2 bg-slate-50 p-3 rounded overflow-auto"></pre>
+          </div>
+          <div class="mt-6 border border-slate-200 rounded-xl bg-white p-12 text-center" id="emptyState">
+            <div class="grid place-items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-14 h-14 text-slate-400"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-.8 2.59-2.6 4.784-4.958 6"/></svg>
+              <div class="mt-4 text-2xl font-semibold">Nenhum dataset ainda</div>
+              <div class="mt-2 text-slate-500">Crie datasets a partir das suas fontes de dados para preparar e visualizar informações.</div>
+              <button class="btn-primary mt-6" id="btnCreate2">+ Criar seu primeiro Dataset</button>
+            </div>
+          </div>
+
+          <div id="listContainer" class="hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" id="dsList"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Modal create dataset -->
+    <div id="modal" class="modal-backdrop">
+      <div class="modal" style="width:min(1040px,95vw)">
+        <div class="modal-header">
+          <div class="font-semibold">Criar Dataset</div>
+          <button id="btnClose" class="btn">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-4">
+            <div class="text-sm font-semibold mb-2">Modelos prontos</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2" id="tpls">
+              <button type="button" class="btn text-left" data-tpl="base">Base Curated</button>
+              <button type="button" class="btn text-left" data-tpl="uf">Soma por UF</button>
+              <button type="button" class="btn text-left" data-tpl="mes">Valor Mês a Mês</button>
+              <button type="button" class="btn text-left" data-tpl="faixa">Total por Faixa de Vencimento</button>
+              <button type="button" class="btn text-left" data-tpl="recuperado">Recuperado por Faixa</button>
+            </div>
+          </div>
+          <form id="form" class="space-y-3">
+            <input id="name" class="w-full border rounded p-2" placeholder="Nome do dataset" />
+            <input id="desc" class="w-full border rounded p-2" placeholder="Descrição (opcional)" />
+            <input id="dsCredorNew" class="w-full border rounded p-2" placeholder="Código da Fonte de Dados (opcional)" />
+            <div class="text-sm text-slate-600">SQL (use {{tenant_id}}, {{from}}, {{to}}, {{filter:uf}} etc.)</div>
+            <textarea id="sql" class="w-full border rounded p-2 font-mono" rows="10" placeholder="SELECT * FROM curated_records WHERE #REPL#n_id={{tenant_id}}"></textarea>
+            <div class="flex gap-2">
+              <button id="btnPreview" class="btn" type="button">Pré-visualizar</button>
+              <button id="btnSave" class="btn-primary" type="submit">Salvar</button>
+              <div id="msg" class="text-sm"></div>
+            </div>
+          </form>
+          <div id="preview" class="mt-4 hidden">
+            <div class="text-sm text-slate-600 mb-2">Prévia (primeiras 50 linhas)</div>
+            <pre id="previewContent" class="bg-slate-900 text-slate-100 p-3 rounded max-h-72 overflow-auto text-xs"></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const api = (p) => `${location.origin}${p}`;
+      const modal = document.getElementById('modal');
+      function token(){ return localStorage.getItem('token') || '' }
+      function setToken(t){ localStorage.setItem('token', t) }
+      function showAuthButtons(){ const has=!!token(); document.getElementById('btnLogin').classList.toggle('hidden', has); document.getElementById('btnLogout').classList.toggle('hidden', !has); }
+      function openModal(){ modal.style.display = 'flex' }
+      function closeModal(){ modal.style.display = 'none' }
+
+      document.getElementById('btnCreate').onclick = openModal;
+      document.getElementById('btnCreate2').onclick = openModal;
+      document.getElementById('btnClose').onclick = closeModal;
+
+      let dsFilterCredor = localStorage.getItem('ds_filter_credor') || '';
+      document.getElementById('dsCredorFilter').value = dsFilterCredor;
+      document.getElementById('dsCredorFilter').addEventListener('change', ()=>{ dsFilterCredor=document.getElementById('dsCredorFilter').value.trim(); localStorage.setItem('ds_filter_credor', dsFilterCredor); loadList(); });
+      async function loadList(){
+        if(!token()){ document.getElementById('emptyState').classList.remove('hidden'); return }
+        const q = dsFilterCredor ? `?credor_code=${encodeURIComponent(dsFilterCredor)}` : '';
+        const r = await fetch(api(`/datasets${q}`), { headers: { Authorization:`Bearer ${token()}` } });
+        if(!r.ok){ return }
+        const list = await r.json();
+        const empty = list.length === 0;
+        document.getElementById('emptyState').classList.toggle('hidden', !empty);
+        document.getElementById('listContainer').classList.toggle('hidden', empty);
+        if(!empty){
+          const c = document.getElementById('dsList'); c.innerHTML='';
+          list.forEach(d => {
+            const el = document.createElement('div');
+            el.className = 'card relative flex items-start justify-between';
+            el.innerHTML = `<div><div class='text-xs text-slate-500'>Dataset${d.credor_code? ' · '+d.credor_code:''}</div><div class='font-semibold'>${d.name}</div><div class='text-xs text-slate-400 mt-1'>${d.description||''}</div></div>`;
+            const actions = document.createElement('div'); actions.className='relative';
+            const btnMenu = document.createElement('button'); btnMenu.className='btn'; btnMenu.textContent='⋯';
+            const menu = document.createElement('div'); menu.className='absolute right-0 top-full mt-1 bg-white border rounded shadow hidden z-10';
+            menu.innerHTML = `<button class='block px-3 py-2 text-sm text-rose-600 hover:bg-rose-50' data-del>Excluir</button>`;
+            btnMenu.addEventListener('click', (e)=>{ e.stopPropagation(); menu.classList.toggle('hidden'); });
+            document.addEventListener('click', ()=> menu.classList.add('hidden'));
+            menu.querySelector('[data-del]').addEventListener('click', async (e)=>{
+              e.stopPropagation();
+              menu.classList.add('hidden');
+              if(!confirm('Excluir este dataset?')) return;
+              const r = await fetch(api(`/datasets/${d.id}`), { method:'DELETE', headers:{ Authorization:`Bearer ${token()}` } });
+              if(r.ok){ loadList(); } else { alert('Falha ao excluir'); }
+            });
+            actions.appendChild(btnMenu); actions.appendChild(menu);
+            el.appendChild(actions);
+            c.appendChild(el);
+          })
+        }
+      }
+
+      document.getElementById('btnLogout').addEventListener('click', () => { localStorage.removeItem('token'); showAuthButtons(); location.href = '/app/login.html?next=/app/datasets-fixed.html'; });
+
+      document.getElementById('btnPreview').addEventListener('click', async () => {
+        const sql = document.getElementById('sql').value.trim();
+        if(!sql) return;
+        const credor_code = (document.getElementById('dsCredorNew').value.trim() || dsFilterCredor || null);
+        const r = await fetch(api('/datasets/preview'), { method: 'POST', headers: { 'Content-Type':'application/json', Authorization:`Bearer ${token()}` }, body: JSON.stringify({ query_sql: sql, credor_code }) });
+        const prev = document.getElementById('preview'); const out = document.getElementById('previewContent');
+        if(r.ok){ const j = await r.json(); out.textContent = JSON.stringify(j.rows, null, 2); prev.classList.remove('hidden'); }
+        else { out.textContent = 'Erro ao executar preview.'; prev.classList.remove('hidden'); }
+      });
+
+      document.getElementById('form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('name').value.trim();
+        const description = document.getElementById('desc').value.trim();
+        const query_sql = document.getElementById('sql').value.trim();
+        const credor_code = (document.getElementById('dsCredorNew').value.trim() || dsFilterCredor || null);
+        const msg = document.getElementById('msg');
+        const r = await fetch(api('/datasets'), { method:'POST', headers: { 'Content-Type':'application/json', Authorization:`Bearer ${token()}` }, body: JSON.stringify({ name, description, query_sql, credor_code }) });
+        msg.textContent = r.ok ? 'Dataset salvo.' : 'Erro ao salvar.';
+        msg.className = r.ok ? 'text-sm text-emerald-600' : 'text-sm text-rose-600';
+        if(r.ok){ setTimeout(()=>{ closeModal(); loadList(); }, 600); }
+      });
+
+      // Templates para preencher automaticamente
+      const templates = {
+        base: {
+          name: 'Base Curated',
+          desc: 'Todos os registros do curated do seu tenant',
+          sql: `SELECT *\nFROM curated_records\nWHERE #REPL#n_id = {{tenant_id}}\n  AND ({{from}} IS NULL OR date(dt_cadastro) >= {{from}})\n  AND ({{to}} IS NULL OR date(dt_cadastro) <= {{to}})\n  {{filter:uf}}\n  {{filter:situacao_processo}}`
+        },
+        uf: {
+          name: 'Soma por UF',
+          desc: 'Agrega o total por UF',
+          sql: `SELECT uf, SUM(vl_titulo) AS total\nFROM curated_records\nWHERE #REPL#n_id = {{tenant_id}}\nGROUP BY uf\nORDER BY total DESC`
+        },
+        mes: {
+          name: 'Valor Mês a Mês',
+          desc: 'Soma por ano-mês (SQLite: strftime)',
+          sql: `SELECT strftime('%Y-%m', dt_cadastro) AS ym, SUM(vl_titulo) AS total\nFROM curated_records\nWHERE #REPL#n_id = {{tenant_id}}\n  AND ({{from}} IS NULL OR date(dt_cadastro) >= {{from}})\n  AND ({{to}} IS NULL OR date(dt_cadastro) <= {{to}})\nGROUP BY ym\nORDER BY ym`
+        },
+        faixa: {
+          name: 'Total por Faixa de Vencimento',
+          desc: 'Soma vl_titulo por faixa calculada pelo dt_vencimento',
+          sql: `WITH base AS (\n  SELECT\n    CASE\n      WHEN dt_vencimento IS NULL THEN 'vazio'\n      WHEN (julianday('now') - julianday(dt_vencimento)) <= 30 THEN '0 a 30 dias'\n      WHEN (julianday('now') - julianday(dt_vencimento)) <= 60 THEN '31 a 60 dias'\n      WHEN (julianday('now') - julianday(dt_vencimento)) <= 90 THEN '61 a 90 dias'\n      WHEN (julianday('now') - julianday(dt_vencimento)) <= 180 THEN '91 a 180 dias'\n      WHEN (julianday('now') - julianday(dt_vencimento)) <= 360 THEN '181 a 360 dias'\n      WHEN (julianday('now') - julianday(dt_vencimento)) <= 720 THEN '361 a 720 dias'\n      ELSE 'Mais de 720 dias'\n    END AS faixa_vencimento,\n    vl_titulo\n  FROM curated_records\n  WHERE #REPL#n_id = {{tenant_id}}\n)\nSELECT faixa_vencimento, SUM(vl_titulo) AS total\nFROM base\nGROUP BY faixa_vencimento\nORDER BY CASE faixa_vencimento\n  WHEN '0 a 30 dias' THEN 1\n  WHEN '31 a 60 dias' THEN 2\n  WHEN '61 a 90 dias' THEN 3\n  WHEN '91 a 180 dias' THEN 4\n  WHEN '181 a 360 dias' THEN 5\n  WHEN '361 a 720 dias' THEN 6\n  WHEN 'Mais de 720 dias' THEN 7\n  WHEN 'vazio' THEN 8\n  ELSE 9 END`
+        },
+        recuperado: {
+          name: 'Recuperado por Faixa de Vencimento',
+          desc: 'Soma vl_total_repasse por faixa',
+          sql: `SELECT faixa_vencimento, SUM(vl_total_repasse) AS total\nFROM curated_records\nWHERE #REPL#n_id = {{tenant_id}}\nGROUP BY faixa_vencimento\nORDER BY total DESC`
+        }
+      };
+      document.querySelectorAll('#tpls [data-tpl]').forEach(b => {
+        b.addEventListener('click', () => {
+          const t = templates[b.dataset.tpl];
+          if(!t) return;
+          document.getElementById('name').value = t.name;
+          document.getElementById('desc').value = t.desc;
+          document.getElementById('sql').value = t.sql;
+          document.getElementById('preview').classList.add('hidden');
+        });
+      });
+
+      showAuthButtons();
+      loadList();
+
+      // Prévia de colunas/linhas do curated
+      document.getElementById('btnPreviewCols').addEventListener('click', async () => {
+        const r = await fetch(api('/meta/curated-info'), { headers: { Authorization:`Bearer ${token()}` } });
+        const box = document.getElementById('previewBox');
+        const chips = document.getElementById('colsChips');
+        const out = document.getElementById('sampleOut');
+        if(!r.ok){ out.textContent = 'Não foi possível carregar a prévia.'; box.classList.remove('hidden'); return }
+        const j = await r.json();
+        const cols = (j.columns||[]).map(c => `<span class="px-2 py-1 text-xs rounded bg-slate-100 border">${c.name}<span class="text-slate-400">:${c.type}</span></span>`).join(' ');
+        chips.innerHTML = cols || '<span class="text-slate-400 text-sm">Sem colunas detectadas</span>';
+        out.textContent = JSON.stringify(j.sample || [], null, 2);
+        box.classList.remove('hidden');
+      });
+
+      // Limpar dados do tenant (curated_records)
+      document.getElementById('btnClearTenant').addEventListener('click', async () => {
+        if(!confirm('Remover todos os dados ingeridos deste tenant?')) return;
+        const r = await fetch(api('/meta/clear-tenant'), { method:'POST', headers: { Authorization:`Bearer ${token()}` } });
+        if(r.ok){
+          const j = await r.json().catch(()=>({}));
+          alert('Dados removidos. Registros apagados: ' + (j.deleted ?? '')); 
+          document.getElementById('previewBox').classList.add('hidden');
+        } else {
+          alert('Falha ao limpar dados.');
+        }
+      });
+    </script>
+  </body>
+  </html>
+

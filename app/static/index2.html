@@ -1,0 +1,301 @@
+﻿<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nexen.ai — Dashboard</title>
+    <link rel="stylesheet" href="/app/styles.css?v=2" />
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-slate-50 text-slate-800">
+    <div class="flex min-h-screen">
+      <!-- Sidebar -->
+      <aside class="w-72 bg-slate-900 text-slate-100 flex flex-col">
+        <div class="p-5 flex items-center gap-3 border-b border-slate-800">
+          <img src="/app/Nexen.ai.png" alt="Logo" class="w-8 h-8 object-contain rounded" />
+          <div>
+            <div class="text-lg font-semibold">Nexen.ai</div>
+            <div class="text-xs text-slate-400">Analytics Platform</div>
+          </div>
+        </div>
+        <nav class="p-3 flex-1">
+          <ul class="space-y-1 text-sm">
+            <li><a class="nav-item active" href="/app/index2.html"><img src="/app/dashboardlogo.png" alt="" class="nav-icon" />Dashboard</a></li>
+            <li><a class="nav-item" href="/app/datasources-fixed.html"><img src="/app/fontededados.png" alt="" class="nav-icon" />Fontes de Dados</a></li>
+            <li><a class="nav-item" href="/app/datasets-fixed.html"><img src="/app/conjuntodedados.png" alt="" class="nav-icon" />Conjuntos de Dados</a></li>
+            <li><a class="nav-item" href="/app/indicators-fixed.html"><img src="/app/indicadores.png" alt="" class="nav-icon" />Indicadores</a></li>
+          </ul>
+          <div class="mt-6 text-xs uppercase tracking-wide text-slate-400">Configuracao</div>
+          <ul class="mt-2 space-y-1 text-sm">
+            <li><a class="nav-item" href="/app/org.html"><img src="/app/organizacao.png" alt="" class="nav-icon" />Organizacao</a></li>
+            <li><a class="nav-item" href="#"><img src="/app/configuracao.png" alt="" class="nav-icon" />Configuracoes</a></li>
+          </ul>
+        </nav>
+        <div class="p-4 text-xs text-slate-400">v0.1.0</div>
+      </aside>
+
+      <!-- Content -->
+      <main class="flex-1">
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6">
+          <div class="flex items-center gap-3 text-3xl font-extrabold text-slate-900"><img src="/app/dashboardlogo.png" alt="" class="page-icon" />Dashboard</div>
+          <div class="flex items-center gap-4">
+            <a id="btnLogin" href="/app/login.html" class="btn hidden">Entrar</a>
+            <div id="profileArea" class="relative hidden">
+              <div id="avatar" class="w-9 h-9 rounded-full bg-indigo-500 text-white grid place-items-center text-sm font-bold cursor-pointer select-none">NX</div>
+              <div id="profileMenu" class="profile-menu hidden">
+                <button id="actionTheme"><span id="themeLabel">Modo noturno</span><span class="theme-badge" id="themeBadge">Desligado</span></button>
+                <button id="actionLogout">Sair</button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <section class="p-6 space-y-8">
+          <div class="space-y-2">
+            <p class="text-slate-500">Bem-vindo a sua plataforma de analytics. Conecte uma fonte de dados para comecar.</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+            <div class="card flex flex-col gap-4 border border-indigo-100 shadow-sm">
+              <div class="flex items-start justify-between">
+                <div>
+                  <p class="text-xs uppercase tracking-wide text-slate-400">Datasets</p>
+                  <h2 class="text-4xl font-bold text-slate-900" id="kpiDatasets">0</h2>
+                </div>
+                <span class="w-10 h-10 grid place-items-center rounded-full bg-indigo-100 text-indigo-600">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h7"/></svg>
+                </span>
+              </div>
+              <p class="text-sm text-slate-500">Fontes preparadas e prontas para consulta.</p>
+              <span class="text-xs font-medium text-emerald-600">+0% vs. mes passado</span>
+            </div>
+
+            <div class="card flex flex-col gap-4 border border-emerald-100 shadow-sm">
+              <div class="flex items-start justify-between">
+                <div>
+                  <p class="text-xs uppercase tracking-wide text-slate-400">Indicadores</p>
+                  <h2 class="text-4xl font-bold text-slate-900" id="kpiIndicators">0</h2>
+                </div>
+                <span class="w-10 h-10 grid place-items-center rounded-full bg-emerald-100 text-emerald-600">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 12h4l3 8 4-16 3 8h2"/></svg>
+                </span>
+              </div>
+              <p class="text-sm text-slate-500">Metricas customizadas com SQL.</p>
+              <span class="text-xs font-medium text-emerald-600">+0% vs. mes passado</span>
+            </div>
+
+            <div class="card flex flex-col gap-4 border border-amber-100 shadow-sm">
+              <div class="flex items-start justify-between">
+                <div>
+                  <p class="text-xs uppercase tracking-wide text-slate-400">Dashboards</p>
+                  <h2 class="text-4xl font-bold text-slate-900" id="kpiDashboards">0</h2>
+                </div>
+                <span class="w-10 h-10 grid place-items-center rounded-full bg-amber-100 text-amber-600">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h18M8 3v18M16 3v18M3 12h18"/></svg>
+                </span>
+              </div>
+              <p class="text-sm text-slate-500">Visualizacoes criadas para o seu time.</p>
+              <span class="text-xs font-medium text-amber-600">+0% vs. mes passado</span>
+            </div>
+
+            <div class="card flex flex-col gap-4 border border-lime-100 shadow-sm">
+              <div class="flex items-start justify-between">
+                <div>
+                  <p class="text-xs uppercase tracking-wide text-slate-400">Consultas hoje</p>
+                  <h2 class="text-4xl font-bold text-slate-900" id="kpiQueries">0</h2>
+                </div>
+                <span class="w-10 h-10 grid place-items-center rounded-full bg-lime-100 text-lime-600">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 13l4 4L19 7"/></svg>
+                </span>
+              </div>
+              <p class="text-sm text-slate-500">Execucoes de indicadores nas ultimas 24h.</p>
+              <span class="text-xs font-medium text-emerald-600">+0% vs. mes passado</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+            <div class="card border border-slate-200/70 shadow-sm">
+              <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-slate-900">Guia rapido</h3>
+                <span class="text-xs font-medium text-indigo-600 uppercase tracking-wide">3 passos</span>
+              </div>
+              <p class="text-sm text-slate-500">Comece a monitorar seus dados em minutos.</p>
+              <ol class="mt-4 space-y-3">
+                <li class="flex gap-3 items-start">
+                  <div class="w-7 h-7 rounded-full bg-indigo-100 text-indigo-600 grid place-items-center text-sm font-semibold">1</div>
+                  <div>
+                    <div class="font-semibold text-slate-800">Conectar fonte de dados</div>
+                    <p class="text-sm text-slate-500">Envie CSV, conecte um banco ou um Google Sheet.</p>
+                  </div>
+                </li>
+                <li class="flex gap-3 items-start">
+                  <div class="w-7 h-7 rounded-full bg-indigo-100 text-indigo-600 grid place-items-center text-sm font-semibold">2</div>
+                  <div>
+                    <div class="font-semibold text-slate-800">Criar indicadores</div>
+                    <p class="text-sm text-slate-500">Defina metricas personalizadas usando SQL.</p>
+                  </div>
+                </li>
+                <li class="flex gap-3 items-start">
+                  <div class="w-7 h-7 rounded-full bg-indigo-100 text-indigo-600 grid place-items-center text-sm font-semibold">3</div>
+                  <div>
+                    <div class="font-semibold text-slate-800">Montar dashboards</div>
+                    <p class="text-sm text-slate-500">Combine indicadores com visualizacoes e KPIs.</p>
+                  </div>
+                </li>
+              </ol>
+            </div>
+
+            <div class="card border border-slate-200/70 shadow-sm h-full">
+              <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-slate-900">Atividades recentes</h3>
+                <span class="text-xs uppercase tracking-wide text-slate-400">Atualizado em tempo real</span>
+              </div>
+              <p class="text-sm text-slate-500">Ultimas mudancas da sua organizacao.</p>
+              <div id="activityFeed" class="mt-5 text-center text-slate-400 text-sm py-10 border border-dashed border-slate-200 rounded-lg">Nenhuma atividade recente.</div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/app/theme.js"></script>
+    <script>
+      const api = (path) => `${location.origin}${path}`;
+      const token = () => localStorage.getItem('token') || '';
+      const authHeaders = () => ({ Authorization: `Bearer ${token()}` });
+
+      const profileArea = document.getElementById('profileArea');
+      const avatarEl = document.getElementById('avatar');
+      const profileMenu = document.getElementById('profileMenu');
+      const themeBadge = document.getElementById('themeBadge');
+      const themeLabel = document.getElementById('themeLabel');
+
+      function setButtons() {
+        const has = !!token();
+        document.getElementById('btnLogin').classList.toggle('hidden', has);
+        if(profileArea){
+          profileArea.classList.toggle('hidden', !has);
+          if(!has){
+            closeProfileMenu();
+            avatarEl.textContent = 'NX';
+            avatarEl.removeAttribute('title');
+          }
+        }
+      }
+
+      function formatNumber(value) {
+        return new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 }).format(value || 0);
+      }
+
+      function initialsFrom(text){
+        if(!text) return 'NX';
+        const cleaned = text.trim().split(/\s+/).filter(Boolean);
+        if(cleaned.length === 0) return 'NX';
+        if(cleaned.length === 1) return cleaned[0].slice(0, 2).toUpperCase();
+        return (cleaned[0][0] + cleaned[cleaned.length - 1][0]).toUpperCase();
+      }
+
+      async function updateAvatar(){
+        if(!avatarEl) return;
+        if(!token()){
+          avatarEl.textContent = 'NX';
+          avatarEl.removeAttribute('title');
+          return;
+        }
+        try {
+          const resp = await fetch(api('/auth/me'), { headers: authHeaders() });
+          if(!resp.ok){
+            if(resp.status === 401) setButtons();
+            return;
+          }
+          const data = await resp.json();
+          const base = data.name || data.email || '';
+          avatarEl.textContent = initialsFrom(base);
+          avatarEl.title = base;
+        } catch (err) {
+          console.error('updateAvatar', err);
+        }
+      }
+
+      function closeProfileMenu(){ if(profileMenu) profileMenu.classList.add('hidden'); }
+      function toggleProfileMenu(){ if(profileMenu) profileMenu.classList.toggle('hidden'); }
+
+      function syncThemeUI(mode){
+        if(mode === 'dark'){
+          themeBadge?.classList.add('active');
+          if(themeBadge) themeBadge.textContent = 'Ligado';
+          if(themeLabel) themeLabel.textContent = 'Modo claro';
+        } else {
+          themeBadge?.classList.remove('active');
+          if(themeBadge) themeBadge.textContent = 'Desligado';
+          if(themeLabel) themeLabel.textContent = 'Modo noturno';
+        }
+      }
+
+      function initTheme(){
+        const mode = Theme.current();
+        Theme.apply(mode);
+        syncThemeUI(mode);
+      }
+      function toggleTheme(){
+        const mode = Theme.toggle();
+        syncThemeUI(mode);
+      }
+
+      async function loadSummary() {
+        if (!token()) {
+          document.getElementById('activityFeed').textContent = 'Faca login para visualizar dados.';
+          return;
+        }
+        try {
+          const resp = await fetch(api('/meta/summary'), { headers: authHeaders() });
+          if (resp.status === 401) {
+            setButtons();
+            document.getElementById('activityFeed').textContent = 'Sessao expirada. Acesse novamente para ver atualizacoes.';
+            return;
+          }
+          if (!resp.ok) throw new Error(await resp.text());
+          const data = await resp.json();
+          document.getElementById('kpiDatasets').textContent = formatNumber(data.datasets);
+          document.getElementById('kpiIndicators').textContent = formatNumber(data.indicators);
+          document.getElementById('kpiDashboards').textContent = formatNumber(data.dashboards);
+          document.getElementById('kpiQueries').textContent = formatNumber(data.queries_today);
+        } catch (err) {
+          console.error('loadSummary', err);
+          document.getElementById('activityFeed').textContent = 'Nao foi possivel carregar os dados do dashboard.';
+        }
+      }
+
+      const actionLogout = document.getElementById('actionLogout');
+      if(actionLogout){
+        actionLogout.addEventListener('click', () => {
+          localStorage.removeItem('token');
+          closeProfileMenu();
+          setButtons();
+          updateAvatar();
+          location.href = '/app/login.html?next=/app/';
+        });
+      }
+
+      const actionTheme = document.getElementById('actionTheme');
+      if(actionTheme){
+        actionTheme.addEventListener('click', () => toggleTheme());
+      }
+
+      if(avatarEl){
+        avatarEl.addEventListener('click', () => { if(token()) toggleProfileMenu(); });
+      }
+      document.addEventListener('click', (event) => {
+        if(!profileArea || profileArea.contains(event.target)) return;
+        closeProfileMenu();
+      });
+
+      initTheme();
+      setButtons();
+      updateAvatar();
+      loadSummary();
+    </script>
+  </body>
+</html>
+
+

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nexen.ai - Acesso</title>
+    <link rel="stylesheet" href="/app/styles.css?v=2" />
+    <style>
+      /* Fallback inline styles to avoid CDN or external CSS issues */
+      html, body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+      .login-page { background:#f8fafc; color:#0f172a; min-height:100vh; display:grid; place-items:center; }
+      .login-card { width:min(420px, 92vw); border:1px solid #e2e8f0; border-radius:16px; padding:28px; box-shadow:0 1px 2px rgba(0,0,0,.06); background:#fff }
+      .login-header { text-align:center; display:flex; flex-direction:column; align-items:center; margin-bottom:18px }
+      .login-header .logo { width:64px; height:64px; object-fit:contain; border-radius:8px; margin-bottom:8px }
+      .login-header .brand { font-weight:600; font-size:18px }
+      .login-header .subtitle { font-size:12px; color:#64748b }
+      .title { font-size:24px; font-weight:700; margin:8px 0 4px }
+      .muted { color:#475569; font-size:14px; margin-bottom:12px }
+      .login-form .form-group { margin-top:12px }
+      .login-form label { display:block; font-size:14px; color:#475569; margin-bottom:6px }
+      .login-form input { width:100%; padding:10px 12px; border:1px solid #e2e8f0; border-radius:8px; outline:none }
+      .login-form input:focus { border-color:#94a3b8; box-shadow:0 0 0 3px rgba(148,163,184,.25) }
+      .btn-primary { background:#1552d6; color:#fff; padding:10px 14px; border-radius:10px; border:0; cursor:pointer }
+      .btn-block { width:100%; margin-top:8px }
+      .form-msg { font-size:14px; margin-top:8px }
+      .form-msg.error { color:#e11d48 }
+      .tabs { display:flex; gap:8px; margin-bottom:8px }
+      .tab { padding:8px 12px; border-radius:9999px; border:1px solid #e2e8f0; cursor:pointer; background:#fff }
+      .tab.active { background:#eef2f6; border-color:#cbd5e1 }
+    </style>
+  </head>
+  <body class="login-page">
+    <div class="card login-card">
+      <div class="login-header">
+        <img src="/app/Nexenblack.png" onerror="this.onerror=null;this.src='/app/Nexen.ai.png'" alt="Logo" class="logo" />
+        <div class="brand">Nexen.ai</div>
+        <div class="subtitle">Analytics Platform</div>
+      </div>
+
+      <h1 class="title">Acessar</h1>
+      <div class="tabs"><button id="tabLogin" class="tab active">Entrar</button><button id="tabSignup" class="tab">Criar conta</button></div>
+
+      <form id="form" class="login-form">
+        <div class="form-group">
+          <label>Email</label>
+          <input id="email" type="email" placeholder="voce@empresa.com" />
+        </div>
+        <div class="form-group" id="grpName" style="display:none">
+          <label>Nome</label>
+          <input id="name" placeholder="Seu nome" />
+        </div>
+        <div class="form-group">
+          <label>Senha</label>
+          <input id="password" type="password" placeholder="••••••" />
+        </div>
+        <div class="form-group">
+          <label>Organization Slug</label>
+          <input id="org" placeholder="ex: minha-org" />
+        </div>
+        <div class="form-group" id="grpOrgName" style="display:none">
+          <label>Organization Name</label>
+          <input id="orgname" placeholder="ex: Minha Organização" />
+        </div>
+        <button class="btn-primary btn-block" type="submit" id="btnSubmit">Entrar</button>
+        <div id="msg" class="form-msg"></div>
+      </form>
+    </div>
+
+    <script src="/app/theme.js"></script>
+    <script>
+      Theme.init();
+      const api = (p) => `${location.origin}${p}`;
+      function setToken(t){ localStorage.setItem('token', t) }
+      function nextUrl(){ const u = new URL(location.href); return u.searchParams.get('next') || '/app/' }
+      // toggle login/signup
+      const tabLogin = document.getElementById('tabLogin');
+      const tabSignup = document.getElementById('tabSignup');
+      const grpName = document.getElementById('grpName');
+      const grpOrgName = document.getElementById('grpOrgName');
+      const btnSubmit = document.getElementById('btnSubmit');
+      function mode(signup){
+        tabLogin.classList.toggle('active', !signup);
+        tabSignup.classList.toggle('active', signup);
+        grpName.style.display = signup? 'block':'none';
+        grpOrgName.style.display = signup? 'block':'none';
+        btnSubmit.textContent = signup? 'Criar conta' : 'Entrar';
+        document.querySelector('.title').textContent = signup? 'Criar conta' : 'Acessar';
+      }
+      tabLogin.onclick = ()=> mode(false);
+      tabSignup.onclick = ()=> mode(true);
+      mode(false);
+      document.getElementById('form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value.trim();
+        const org_slug = document.getElementById('org').value.trim();
+        const name = document.getElementById('name').value.trim();
+        const org_name = document.getElementById('orgname').value.trim();
+        const signup = tabSignup.classList.contains('active');
+        const url = signup? '/auth/register' : '/auth/login';
+        const body = signup ? { email, name, password, org_slug, org_name } : { email, password, org_slug };
+        const r = await fetch(api(url), { method:'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(body) });
+        const msg = document.getElementById('msg');
+        if(r.ok){ const j = await r.json(); setToken(j.access_token); location.href = nextUrl(); }
+        else {
+          let err = 'Falha na autenticação';
+          try { const j = await r.json(); if(j?.detail) err = j.detail; } catch {}
+          msg.textContent = err;
+          msg.className = 'form-msg error';
+        }
+      });
+    </script>
+  </body>
+  </html>

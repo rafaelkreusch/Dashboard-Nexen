@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nexen.ai — Dashboard</title>
+    <link rel="stylesheet" href="/app/styles.css?v=2" />
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-slate-50 text-slate-800">
+    <div class="flex min-h-screen">
+      <!-- Sidebar -->
+      <aside class="w-72 bg-slate-900 text-slate-100 flex flex-col">
+        <div class="p-5 flex items-center gap-3 border-b border-slate-800">
+          <div class="rounded-lg">
+            <img src="/app/Nexen.ai.png" alt="Logo" class="w-8 h-8 object-contain rounded" />
+          </div>
+          <div>
+            <div class="text-lg font-semibold">Nexen.ai</div>
+            <div class="text-xs text-slate-400">Analytics Platform</div>
+          </div>
+        </div>
+        <nav class="p-3 flex-1">
+          
+
+<ul class="space-y-1 text-sm">
+  <li><a class="nav-item active" href="/app/index2.html"><img src="/app/dashboardlogo.png" alt="" class="nav-icon" />Dashboard</a></li>
+  <li><a class="nav-item" href="/app/datasources-fixed.html"><img src="/app/fontededados.png" alt="" class="nav-icon" />Fontes de Dados</a></li>
+  <li><a class="nav-item" href="/app/datasets-fixed.html"><img src="/app/conjuntodedados.png" alt="" class="nav-icon" />Conjuntos de Dados</a></li>
+  <li><a class="nav-item" href="/app/indicators-fixed.html"><img src="/app/indicadores.png" alt="" class="nav-icon" />Indicadores</a></li>
+</ul>
+<div class="mt-6 text-xs uppercase tracking-wide text-slate-400">Configuracao</div>
+<ul class="mt-2 space-y-1 text-sm">
+  <li><a class="nav-item" href="/app/org.html"><img src="/app/organizacao.png" alt="" class="nav-icon" />Organizacao</a></li>
+  <li><a class="nav-item" href="#"><img src="/app/configuracao.png" alt="" class="nav-icon" />Configuracoes</a></li>
+</ul>
+
+
+        </nav>
+        <div class="p-4 text-xs text-slate-400">v0.1.0</div>
+      </aside>
+
+      <!-- Content -->
+      <main class="flex-1">
+        <!-- Top bar -->
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6">
+          <div class="flex items-center gap-3">
+            <button id="btnMenu" class="md:hidden p-2 rounded hover:bg-slate-100">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+            </button>
+            <div class="text-3xl font-extrabold">Dashboard</div>
+          </div>
+          <div class="flex items-center gap-4">
+            <a id="btnLogin" href="/app/login.html" class="px-3 py-1.5 rounded bg-slate-900 text-white text-sm hidden">Entrar</a>
+            <div id="profileArea" class="relative hidden">
+              <div id="avatar" class="w-9 h-9 rounded-full bg-indigo-500 text-white grid place-items-center text-sm font-bold cursor-pointer select-none">NX</div>
+              <div id="profileMenu" class="profile-menu hidden">
+                <button id="actionTheme"><span id="themeLabel">Modo noturno</span><span class="theme-badge" id="themeBadge">Desligado</span></button>
+                <button id="actionLogout">Sair</button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <section class="p-6 space-y-6">
+          <div>
+            <h1 class="text-4xl font-extrabold tracking-tight">Dashboard</h1>
+            <p class="text-slate-600 mt-1">Bem-vindo à sua plataforma de analytics. Comece conectando sua primeira fonte de dados.</p>
+          </div>
+
+          <!-- KPI Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+            <div class="card relative shadow-sm">
+              <div class="absolute right-4 top-4 text-indigo-600">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21v-4a6 6 0 016-6h2a6 6 0 016 6v4M16 3.5a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+              </div>
+              <div class="text-slate-500 text-sm">Total de Conjuntos de Dados</div>
+              <div class="mt-1 text-5xl font-bold" id="kpiConjuntos de Dados">0</div>
+              <div class="mt-1 text-xs text-slate-500">Fontes de dados ativas</div>
+              <div class="mt-2 text-xs text-emerald-600">+0% em relação ao mês passado</div>
+            </div>
+
+            <div class="card relative shadow-sm">
+              <div class="absolute right-4 top-4 text-emerald-600">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path d="M11.47 3.84a.75.75 0 011.06 0l7.65 7.65a.75.75 0 010 1.06l-7.65 7.65a.75.75 0 01-1.06 0l-7.65-7.65a.75.75 0 010-1.06l7.65-7.65z"/></svg>
+              </div>
+              <div class="text-slate-500 text-sm">Indicadores</div>
+              <div class="mt-1 text-5xl font-bold" id="kpiIndicadores">0</div>
+              <div class="mt-1 text-xs text-slate-500">Métricas personalizadas</div>
+              <div class="mt-2 text-xs text-emerald-600">+0% em relação ao mês passado</div>
+            </div>
+
+            <div class="card relative shadow-sm">
+              <div class="absolute right-4 top-4 text-amber-600">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h18v4H3zM3 9h18v12H3z"/></svg>
+              </div>
+              <div class="text-slate-500 text-sm">Dashboards</div>
+              <div class="mt-1 text-5xl font-bold" id="kpiDashboards">0</div>
+              <div class="mt-1 text-xs text-slate-500">Visualizações ativas</div>
+              <div class="mt-2 text-xs text-amber-600">+0% em relação ao mês passado</div>
+            </div>
+
+            <div class="card relative shadow-sm">
+              <div class="absolute right-4 top-4 text-emerald-600">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8h18M3 16h18"/></svg>
+              </div>
+              <div class="text-slate-500 text-sm">Consultas hoje</div>
+              <div class="mt-1 text-5xl font-bold" id="kpiQueries">0</div>
+              <div class="mt-1 text-xs text-slate-500">Chamadas de API</div>
+              <div class="mt-2 text-xs text-emerald-600">+0% em relação ao mês passado</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <div class="panel">
+              <div class="text-2xl font-semibold">Início Rápido</div>
+              <div class="text-slate-500">Comece com sua plataforma de analytics</div>
+              <div class="mt-4 space-y-3">
+                <a href="/app/datasources.html" class="qs flex items-center gap-3">
+                  <span class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 grid place-items-center text-sm font-semibold">1</span>
+                  <div>
+                    <div class="font-semibold">Conectar Fonte de Dados</div>
+                    <div class="text-slate-500 text-sm">Envie CSV, conecte banco de dados ou vincule Google Sheets</div>
+                  </div>
+                </a>
+                <a href="/app/Indicadores.html" class="qs flex items-center gap-3">
+                  <span class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 grid place-items-center text-sm font-semibold">2</span>
+                  <div>
+                    <div class="font-semibold">Criar Indicadores</div>
+                    <div class="text-slate-500 text-sm">Defina métricas personalizadas com SQL</div>
+                  </div>
+                </a>
+                <div class="qs flex items-center gap-3">
+                  <span class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 grid place-items-center text-sm font-semibold">3</span>
+                  <div>
+                    <div class="font-semibold">Construir Dashboard</div>
+                    <div class="text-slate-500 text-sm">Visualize seus dados com gráficos e KPIs</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="text-2xl font-semibold">Atividade Recente</div>
+              <div class="text-slate-500">Últimas atualizações da sua organização</div>
+              <div class="mt-10 text-slate-400 grid place-items-center h-40">Sem atividades recentes</div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/app/theme.js"></script>
+    <script>
+      const api = (p) => `${location.origin}${p}`;
+      function token(){ return localStorage.getItem('token') || '' }
+      function setToken(t){ localStorage.setItem('token', t) }
+      const authHeaders = () => ({ Authorization: `Bearer ${token()}` });
+      const profileArea = document.getElementById('profileArea');
+      const avatarEl = document.getElementById('avatar');
+      const profileMenu = document.getElementById('profileMenu');
+      const themeBadge = document.getElementById('themeBadge');
+      const themeLabel = document.getElementById('themeLabel');
+
+      function showAuthButtons(){
+        const has = !!token();
+        document.getElementById('btnLogin').classList.toggle('hidden', has);
+        if(profileArea){
+          profileArea.classList.toggle('hidden', !has);
+          if(!has){
+            closeProfileMenu();
+            avatarEl.textContent = 'NX';
+            avatarEl.removeAttribute('title');
+          }
+        }
+      }
+
+      function initialsFrom(text){
+        if(!text) return 'NX';
+        const cleaned = text.trim().split(/\s+/).filter(Boolean);
+        if(cleaned.length === 0) return 'NX';
+        if(cleaned.length === 1) return cleaned[0].slice(0, 2).toUpperCase();
+        return (cleaned[0][0] + cleaned[cleaned.length - 1][0]).toUpperCase();
+      }
+
+      async function updateAvatar(){
+        if(!avatarEl) return;
+        if(!token()){
+          avatarEl.textContent = 'NX';
+          avatarEl.removeAttribute('title');
+          return;
+        }
+        try {
+          const r = await fetch(api('/auth/me'), { headers: authHeaders() });
+          if(!r.ok){
+            if(r.status === 401) showAuthButtons();
+            return;
+          }
+          const data = await r.json();
+          const base = data.name || data.email || '';
+          avatarEl.textContent = initialsFrom(base);
+          avatarEl.title = base;
+        } catch (err) {
+          console.error('updateAvatar', err);
+        }
+      }
+
+      async function fetchSummary(){
+        if(!token()) return;
+        const r = await fetch(api('/meta/summary'), { headers: authHeaders() });
+        if(!r.ok) return;
+        const j = await r.json();
+        document.getElementById('kpiConjuntos de Dados').textContent = j.Conjuntos de Dados;
+        document.getElementById('kpiIndicadores').textContent = j.Indicadores;
+        document.getElementById('kpiDashboards').textContent = j.dashboards;
+        document.getElementById('kpiQueries').textContent = j.queries_today;
+      }
+
+      function closeProfileMenu(){ if(profileMenu) profileMenu.classList.add('hidden'); }
+      function toggleProfileMenu(){
+        if(!profileMenu) return;
+        profileMenu.classList.toggle('hidden');
+      }
+
+      function syncThemeUI(mode){
+        if(mode === 'dark'){
+          themeBadge?.classList.add('active');
+          if(themeBadge) themeBadge.textContent = 'Ligado';
+          if(themeLabel) themeLabel.textContent = 'Modo claro';
+        } else {
+          themeBadge?.classList.remove('active');
+          if(themeBadge) themeBadge.textContent = 'Desligado';
+          if(themeLabel) themeLabel.textContent = 'Modo noturno';
+        }
+      }
+
+      function initTheme(){
+        const mode = Theme.current();
+        Theme.apply(mode);
+        syncThemeUI(mode);
+      }
+
+      function toggleTheme(){
+        const mode = Theme.toggle();
+        syncThemeUI(mode);
+      }
+
+      const actionLogout = document.getElementById('actionLogout');
+      if(actionLogout){
+        actionLogout.addEventListener('click', () => {
+          localStorage.removeItem('token');
+          closeProfileMenu();
+          showAuthButtons();
+          updateAvatar();
+          location.href = '/app/login.html';
+        });
+      }
+
+      const actionTheme = document.getElementById('actionTheme');
+      if(actionTheme){
+        actionTheme.addEventListener('click', () => toggleTheme());
+      }
+
+      if(avatarEl){
+        avatarEl.addEventListener('click', () => {
+          if(!token()) return;
+          toggleProfileMenu();
+        });
+      }
+
+      document.addEventListener('click', (event) => {
+        if(!profileArea || profileArea.contains(event.target)) return;
+        closeProfileMenu();
+      });
+
+      initTheme();
+      showAuthButtons();
+      updateAvatar();
+      fetchSummary();
+
+      // Ajusta link de Organização mesmo se o HTML antigo tiver href="#"
+      document.addEventListener('DOMContentLoaded', () => {
+      try {
+        const anchors = Array.from(document.querySelectorAll('a'));
+        let orgLink = anchors.find(a => (a.textContent||'').toLowerCase().includes('organ'));
+        if(orgLink){
+          orgLink.href = '/app/org.html';
+          orgLink.onclick = (e)=>{ e.preventDefault(); location.href='/app/org.html'; };
+        } else {
+          // Se não encontrou, cria o item corretamente
+          const nav = document.querySelector('aside nav');
+          const lists = nav ? nav.querySelectorAll('ul') : [];
+          const ul = lists && lists.length ? lists[lists.length-1] : null;
+          if(ul){
+            const li = document.createElement('li');
+            const a = document.createElement('a'); a.className='nav-item'; a.href='/app/org.html'; a.textContent='Organização';
+            li.appendChild(a); ul.insertBefore(li, ul.firstChild);
+          }
+        }
+        // Captura qualquer clique em link "Organização" para garantir navegação
+        document.addEventListener('click', (e)=>{
+          const a = e.target && (e.target.closest ? e.target.closest('a') : null);
+          if(a && (a.textContent||'').toLowerCase().includes('organ')){
+            e.preventDefault();
+            location.href = '/app/org.html';
+          }
+        }, true);
+      } catch {}
+      });
+    </script>
+  </body>
+  </html>
+
