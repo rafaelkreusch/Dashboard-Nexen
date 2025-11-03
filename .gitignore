@@ -1,0 +1,12 @@
+local.db
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite
+temp_patch.txt
+patch.txt
+nul
+*.tmp
+local.db

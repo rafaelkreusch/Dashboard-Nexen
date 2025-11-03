@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nexen.ai — Indicadores</title>
+    <link rel="stylesheet" href="/app/styles.css?v=2" />
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-slate-50 text-slate-800">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <div class="flex min-h-screen">
+      <aside class="w-72 bg-slate-900 text-slate-100 flex flex-col">
+        <div class="p-5 flex items-center gap-3 border-b border-slate-800">
+          <div class="rounded-lg">
+            <img src="/app/Nexen.ai.png" alt="Logo" class="w-8 h-8 object-contain rounded" />
+          </div>
+          <div>
+            <div class="text-lg font-semibold">Nexen.ai</div>
+            <div class="text-xs text-slate-400">Analytics Platform</div>
+          </div>
+        </div>
+        <nav class="p-3 flex-1">
+          <ul class="space-y-1 text-sm">
+            <li><a class="nav-item" href="/app/">Dashboard</a></li>
+            <li><a class="nav-item" href="/app/datasources.html">Fontes de Dados</a></li>
+            <li><a class="nav-item" href="/app/Conjuntos de Dados.html">Conjuntos de Dados</a></li>
+            <li><a class="nav-item active" href="/app/Indicadores.html">Indicadores</a></li>
+          </ul>
+        </nav>
+        <div class="p-4 text-xs text-slate-400">v0.1.0</div>
+      </aside>
+
+      <main class="flex-1">
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6">
+          <div class="text-3xl font-extrabold">Indicadores</div>
+          <div class="flex items-center gap-3">
+            
+            <button id="btnCreate" class="btn-primary flex items-center gap-2">+<span>Criar Indicador</span></button>
+            <a id="btnLogin" href="/app/login.html" class="btn hidden">Entrar</a>
+            <button id="btnLogout" class="btn hidden">Sair</button>
+          </div>
+        </header>
+
+        <section class="p-6">
+          <p class="text-slate-600">Defina métricas personalizadas com SQL</p>
+
+          <div class="mt-6 border border-slate-200 rounded-xl bg-white p-12 text-center" id="emptyState">
+            <div class="grid place-items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-14 h-14 text-slate-400">
+                <path d="M4 19V6m0 0l4 3m-4-3l-4 3M10 19v-8m0 0l4 3m-4-3l-4 3M16 19V4m0 0l4 3m-4-3l-4 3"/>
+              </svg>
+              <div class="mt-4 text-2xl font-semibold">Nenhum indicador ainda</div>
+              <div class="mt-2 text-slate-500">Crie indicadores personalizados para calcular KPIs, agregações e métricas a partir dos seus datasets.</div>
+              <button class="btn-primary mt-6" id="btnCreate2">+ Criar seu primeiro indicador</button>
+            </div>
+          </div>
+
+          
+          <div class="mb-4 flex items-center gap-2">
+            <div id="catFilters" class="hidden flex flex-wrap gap-2"></div>
+            <button id="btnNewFolder" class="btn">+ Nova Pasta</button>
+          </div>
+          <div id="listContainer" class="hidden">
+            <div id="list"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Modal criar indicador -->
+    <div id="modal" class="modal-backdrop">
+      <div class="modal" style="width:min(1040px,95vw)">
+        <div class="modal-header">
+          <div class="font-semibold">Criar Indicador</div>
+          <button id="btnClose" class="btn">×</button>
+        </div>
+        <div class="modal-body">
+          <!-- templates removidos -->`n            <form id="form" class="space-y-3">
+            <input id="key" class="w-full border rounded p-2" placeholder="Chave (ex: valor_mes_a_mes)" />
+            <input id="name" class="w-full border rounded p-2" placeholder="Nome" />
+            <div class="flex gap-2">
+              <input id="cat" class="border rounded p-2 flex-1" list="catlist" placeholder="Categoria (ex: Vendas)" />
+              <datalist id="catlist"></datalist>
+            </div>
+            <div class="text-sm text-slate-600">SQL do indicador (apenas SELECT + placeholders)</div>
+            <textarea id="sql" class="w-full border rounded p-2 font-mono" rows="10"></textarea>
+            <div class="flex gap-2">
+              <button id="btnPreview" class="btn" type="button">Executar teste</button>
+              <button id="btnSave" class="btn-primary" type="submit">Salvar</button>
+              <div id="msg" class="text-sm"></div>
+            </div>
+          </form>
+          <div id="preview" class="mt-4 hidden">
+            <div class="text-sm text-slate-600 mb-2">Resultado</div>
+            <pre id="previewContent" class="bg-slate-900 text-slate-100 p-3 rounded max-h-72 overflow-auto text-xs"></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal visualizar indicador (gráfico/KPI) -->
+    <div id="modalView" class="modal-backdrop">
+      <div class="modal" style="width:min(1040px,95vw)">
+        <div class="modal-header">
+          <div class="font-semibold" id="viewTitle" >Indicador</div>
+          <div class="flex items-center gap-2">
+            <label class="text-sm text-slate-600">Visão:</label>
+            <select id="vizSelect" class="border rounded p-1 text-sm">
+              <option value="bar">Barra</option>
+              <option value="line">Linha</option>
+              <option value="pie">Pizza</option>
+              <option value="kpi">KPI</option>
+              <option value="table">Tabela</option>
+              <option value="map_br">Mapa Brasil</option>
+            </select>
+            <button id="btnSaveFmt" class="btn">Salvar como padrão</button>
+            <button id="btnCloseView" class="btn">×</button>
+          </div>
+        </div>
+        <div class="modal-body">
+          <div id="kpiBox" class="hidden text-center">
+            <div class="text-sm text-slate-500">Valor</div>
+            <div id="kpiValue" class="text-5xl font-extrabold mt-2"></div>
+          </div>
+          <div id="emptyViz" class="hidden text-center text-slate-500 py-10">Sem dados para exibir.</div>
+          <canvas id="chartCanvas" class="w-full" style="display:block; height:420px; max-height:70vh;"></canvas>
+          <div id="mapContainer" style="display:none; width:100%; height:420px; max-height:70vh;"></div>
+          <pre id="tableOut" class="hidden bg-slate-900 text-slate-100 p-3 rounded max-h-72 overflow-auto text-xs"></pre>
+        </div>
+      </div>
+    </div>
+
+    <script src="/app/theme.js"></script>
+    <script>
+      Theme.init();
+
+      const api = (p) => `${location.origin}${p}`;
+      const modal = document.getElementById('modal');
+      function token(){ return localStorage.getItem('token') || '' }
+      function setToken(t){ localStorage.setItem('token', t) }
+      function showAuth(){ const has=!!token(); document.getElementById('btnLogin').classList.toggle('hidden', has); document.getElementById('btnLogout').classList.toggle('hidden', !has); }
+      function openModal(){ modal.style.display='flex' }
+      function closeModal(){ modal.style.display='none' }
+
+      document.getElementById('btnCreate').onclick = openModal;
+      document.getElementById('btnCreate2').onclick = openModal;
+      document.getElementById('btnClose').onclick = closeModal;
+      document.getElementById('btnLogout').onclick = () => { localStorage.removeItem('token'); window.__virtualFolders = window.__virtualFolders || [];
+      showAuth(); location.href='/app/login.html?next=/app/Indicadores.html' };
+
+      async function loadList(){
+        if(!token()){ document.getElementById('emptyState').classList.remove('hidden'); return }
+        const r = await fetch(api('/Indicadores'), { headers: { Authorization: `Bearer ${token()}` } });
+        if(!r.ok) return; const list = await r.json();
+        const empty = list.length === 0;
+        document.getElementById('emptyState').classList.toggle('hidden', !empty);
+        document.getElementById('listContainer').classList.toggle('hidden', empty);
+        document.getElementById('catFilters').classList.toggle('hidden', empty);
+        if(!empty){
+          const baseCats = Array.from(new Set(list.map(i => i.category || 'Sem pasta')));
+          const virtual = (window.__virtualFolders || []);
+          const cats = Array.from(new Set([...baseCats, ...virtual]));
+          renderFilters(cats);
+          const container = document.getElementById('list');
+          container.innerHTML = '';
+          const selected = window.__catSel || 'Todas';
+          const group = (arr, key) => arr.reduce((acc,x)=>{ const k=x[key]||'Sem pasta'; (acc[k]=acc[k]||[]).push(x); return acc }, {});
+          const grouped = group(list,'category');
+          const renderCat = (cat, items) => {
+            const section = document.createElement('div');
+            section.innerHTML = `<div class='text-slate-500 font-semibold mb-2 mt-6'>${cat}</div>`;
+            const grid = document.createElement('div');
+            grid.className = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4';
+            
+            if(items.length === 0){ const ph=document.createElement('div'); ph.className='text-slate-400 text-sm'; ph.textContent='Arraste indicadores para cá...'; section.appendChild(ph); }
+            items.forEach(i => {
+              const el = document.createElement('div'); el.className='card'; el.draggable=true; el.dataset.id=i.id;
+              el.innerHTML = `<div class='text-xs text-slate-500'>Indicador</div><div class='font-semibold'>${i.name}</div><div class='text-xs text-slate-400 mt-1'>${i.key}${i.fmt? ' Â· '+i.fmt:''}</div>`;
+              el.style.cursor='pointer'; el.addEventListener('click', ()=> openView(i));
+              el.addEventListener('dragstart', (ev)=>{ ev.dataTransfer.setData('text/plain', String(i.id)); });
+              grid.appendChild(el);
+            });
+            section.appendChild(grid); container.appendChild(section);
+            section.addEventListener('dragover', (ev)=> ev.preventDefault());
+            section.addEventListener('drop', async (ev)=>{
+              ev.preventDefault(); const id = ev.dataTransfer.getData('text/plain');
+              const catVal = (cat==='Sem pasta')? '' : cat;
+              await fetch(api(`/Indicadores/${id}/move`), { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token()}` }, body: JSON.stringify({ category: catVal }) });
+              await loadList();
+            });
+          };
+          if(selected==='Todas'){
+            cats.forEach(cat => renderCat(cat, grouped[cat==='Sem pasta'? undefined : cat] || grouped[cat] || []));
+          } else {
+            renderCat(selected, grouped[selected==='Sem pasta'? undefined : selected] || grouped[selected] || []);
+          }
+          // preencher datalist
+          const dl = document.getElementById('catlist'); dl.innerHTML = cats.filter(c=>c!=='Sem pasta').map(c=>`<option value="${c}"></option>`).join('');
+        }
+      }
+
+      function renderFilters(allCats){
+        const f = document.getElementById('catFilters');
+        const options = ['Todas', ...allCats];
+        f.innerHTML = options.map(c=>`<button data-cat="${c}" class="btn${(window.__catSel||'Todas')===c?' bg-slate-200':''}">${c}</button>`).join(' ');
+        f.querySelectorAll('button').forEach(b=> b.addEventListener('click', ()=>{ window.__catSel=b.dataset.cat; loadList(); }));
+      }
+
+            async function saveIndicator() {
+        const key = document.getElementById('key').value.trim();
+        const name = document.getElementById('name').value.trim();
+        const category = document.getElementById('cat').value.trim();
+        const formula_sql = document.getElementById('sql').value.trim();
+        const msg = document.getElementById('msg');
+        const r = await fetch(api('/Indicadores'), { method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${token()}`}, body: JSON.stringify({ key, name, formula_sql, category }) });
+        msg.textContent = r.ok ? 'Indicador salvo.' : 'Erro ao salvar.';
+        msg.className = r.ok ? 'text-sm text-emerald-600' : 'text-sm text-rose-600';
+        if(r.ok){ setTimeout(()=>{ closeModal(); loadList(); }, 400); }
+        return r.ok;
+      }
+
+      
+          if(m==='mes'){ document.getElementById('key').value='valor_mes_a_mes'; document.getElementById('name').value='Valor Mês a Mês'; }
+          if(m==='uf'){ document.getElementById('key').value='mapa_por_uf'; document.getElementById('name').value='Mapa por UF'; }
+          if(m==='faixa'){ document.getElementById('key').value='total_por_faixa_vencimento'; document.getElementById('name').value='Total por Faixa de Vencimento'; }
+          if(m==='rec'){ document.getElementById('key').value='recuperado_por_faixa_vencimento'; document.getElementById('name').value='Recuperado por Faixa de Vencimento'; }
+          // Agora apenas preenche; salve manualmente se quiser
+        });
+      });
+
+      document.getElementById('btnPreview').addEventListener('click', async () => {
+        const key = document.getElementById('key').value.trim();
+        const name = document.getElementById('name').value.trim();
+        const formula_sql = document.getElementById('sql').value.trim();
+        const r = await fetch(api('/Indicadores/preview'), { method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${token()}`}, body: JSON.stringify({ key, name, formula_sql }) });
+        const out = document.getElementById('previewContent'); const wrp=document.getElementById('preview');
+        if(r.ok){ const j = await r.json(); out.textContent = JSON.stringify(j.rows, null, 2); wrp.classList.remove('hidden'); }
+        else { out.textContent = 'Erro no Test Run'; wrp.classList.remove('hidden'); }
+      });
+
+      document.getElementById('form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await saveIndicator();
+      });
+
+      document.getElementById('btnDefaults').addEventListener('click', async () => {
+        const r = await fetch(api('/Indicadores/bootstrap'), { method:'POST', headers:{ Authorization:`Bearer ${token()}` } });
+        if(r.ok){ await loadList(); }
+      });
+
+      window.__virtualFolders = window.__virtualFolders || [];
+      showAuth();
+      loadList();
+
+      // ----- Preview/Chart -----
+      let chart;
+      let ech; // echarts instance
+      const modalView=document.getElementById('modalView');
+      document.getElementById('btnCloseView').onclick=()=>{ modalView.style.display='none'; if(chart){ chart.destroy(); chart=null } if(ech){ ech.dispose(); ech=null } }
+
+      let currentInd=null; let currentRows=[];
+      async function openView(ind){
+        currentInd = ind;
+        document.getElementById('viewTitle').textContent = ind.name;
+        // Pre-seleciona dropdown com fmt do indicador, se houver
+        const sel = document.getElementById('vizSelect');
+        sel.value = ind.fmt || sel.value;
+        modalView.style.display='flex';
+        // run indicator
+        const r = await fetch(api(`/Indicadores/${ind.id}/run`), { method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${token()}`}, body: JSON.stringify({}) });
+        currentRows = r.ok ? (await r.json()).rows : [];
+        renderChart(ind, currentRows, sel.value);
+      }
+
+      function renderChart(ind, rows, overrideFmt){
+        const canvas=document.getElementById('chartCanvas');
+        const table=document.getElementById('tableOut');
+        const kpiBox=document.getElementById('kpiBox');
+        const empty=document.getElementById('emptyViz');
+        const mapDiv=document.getElementById('mapContainer');
+        document.getElementById('kpiValue').textContent='';
+        kpiBox.classList.add('hidden'); table.classList.add('hidden'); empty.classList.add('hidden'); mapDiv.style.display='none';
+        if(chart){ chart.destroy(); chart=null }
+        if(ech){ ech.dispose(); ech=null }
+
+        if(!rows || rows.length===0){ empty.classList.remove('hidden'); return }
+        const fmt = overrideFmt || ind.fmt || guessFmt(rows);
+        if(fmt==='kpi'){
+          const v = (rows[0] && (rows[0].total || Object.values(rows[0]).find(x=>typeof x==='number'))) || 0;
+          document.getElementById('kpiValue').textContent = Number(v).toLocaleString('pt-BR');
+          kpiBox.classList.remove('hidden');
+          return;
+        }
+        if(fmt==='table'){
+          table.textContent = JSON.stringify(rows, null, 2);
+          table.classList.remove('hidden');
+          return;
+        }
+        if(fmt==='map_br'){
+          renderBrazilMap(rows, ind.name);
+          return;
+        }
+        let {labels, values} = extractSeries(rows);
+        const type = (fmt==='line'||fmt==='bar'||fmt==='pie') ? fmt : 'bar';
+
+        // Para pizza: limitar número de fatias e usar paleta variada
+        if(type==='pie' && labels.length > 12){
+          const pairs = labels.map((l,i)=>({ l, v: values[i] }));
+          pairs.sort((a,b)=>b.v-a.v);
+          const top = pairs.slice(0,11);
+          const outros = pairs.slice(11).reduce((s,p)=>s+p.v,0);
+          labels = top.map(p=>p.l).concat(['Outros']);
+          values = top.map(p=>p.v).concat([outros]);
+        }
+        const colors = (type==='pie') ? buildColors(labels.length) : ['rgba(37,99,235,0.4)'];
+
+        chart = new Chart(canvas, {
+          type,
+          data: { labels, Conjuntos de Dados: [{ label: ind.name, data: values, backgroundColor: colors, borderColor: colors.map(c=>c.replace('0.6','1').replace('0.4','1')), borderWidth: 2 }] },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: { legend: { position: 'top' } },
+            layout: { padding: 10 },
+            scales: (type==='pie')?{}:{ y: { beginAtZero:true } }
+          }
+        });
+      }
+
+      const UF_TO_NAME = {
+        'AC':'Acre','AL':'Alagoas','AP':'Amapá','AM':'Amazonas','BA':'Bahia','CE':'Ceará','DF':'Distrito Federal','ES':'Espírito Santo','GO':'Goiás','MA':'Maranhão','MT':'Mato Grosso','MS':'Mato Grosso do Sul','MG':'Minas Gerais','PA':'Pará','PB':'Paraíba','PR':'Paraná','PE':'Pernambuco','PI':'Piauí','RJ':'Rio de Janeiro','RN':'Rio Grande do Norte','RS':'Rio Grande do Sul','RO':'Rondônia','RR':'Roraima','SC':'Santa Catarina','SP':'São Paulo','SE':'Sergipe','TO':'Tocantins'
+      };
+
+      async function renderBrazilMap(rows, title){
+        const el = document.getElementById('mapContainer');
+        const canvas = document.getElementById('chartCanvas');
+        el.style.display='block';
+        canvas.style.display='none';
+        // Prepare data: map UF -> value, normalize siglas
+        const data = [];
+        rows.forEach(r=>{
+          if(!r.uf) return;
+          const uf = String(r.uf).toUpperCase();
+          const name = UF_TO_NAME[uf];
+          if(!name) return; // ignora 'XX', 'NULL', etc
+          const value = Number(r.total||r.valor||r.vl_titulo||0);
+          data.push({ name, value });
+        });
+        if(data.length===0){ document.getElementById('emptyViz').classList.remove('hidden'); return }
+
+        // Carrega GeoJSON do Brasil (estados) via CDN e renderiza com ECharts
+        try {
+          const geo = await fetchBrazilGeoJSON();
+          ech = echarts.init(el);
+          echarts.registerMap('BR', geo);
+          ech.setOption({
+            title: { text: title, left: 'center', textStyle:{ fontSize: 14 } },
+            tooltip: { trigger:'item', formatter: '{b}: {c}' },
+            visualMap: { type:'continuous', left:'left', min: 0, max: Math.max(...data.map(d=>d.value)), text:['Alto','Baixo'], inRange:{ color:['#dbeafe','#60a5fa','#1d4ed8'] } },
+            series: [{ type:'map', map:'BR', name:title, roam:true, data }]
+          });
+        } catch(e) {
+          // Fallback para barra se falhar o fetch
+          canvas.style.display='block';
+          const {labels, values} = extractSeries(rows);
+          chart = new Chart(canvas, { type:'bar', data:{ labels, Conjuntos de Dados:[{ label:title, data: values }] }, options:{ responsive:true, scales:{ y:{ beginAtZero:true } } } });
+        }
+      }
+
+      async function fetchBrazilGeoJSON(){
+        const urls = [
+          'https://cdn.jsdelivr.net/gh/codeforamerica/click_that_hood@main/public/data/brazil-states.geojson',
+          'https://fastly.jsdelivr.net/gh/codeforamerica/click_that_hood@main/public/data/brazil-states.geojson',
+          'https://geo.dataviz.cn/maps/geojson/brazil.json'
+        ];
+        let lastErr;
+        for(const u of urls){
+          try {
+            const ctrl = new AbortController();
+            const t = setTimeout(()=>ctrl.abort(), 8000);
+            const r = await fetch(u, { signal: ctrl.signal });
+            clearTimeout(t);
+            if(r.ok){ return await r.json(); }
+          } catch(err){ lastErr = err; }
+        }
+        throw lastErr || new Error('GeoJSON fetch failed');
+      }
+
+      function extractSeries(rows){
+        if(!rows || rows.length===0) return { labels: [], values: [] };
+        const first = rows[0];
+        const cols = Object.keys(first);
+        // try common shapes
+        if(cols.includes('ym')){
+          const labels = rows.map(r=>r.ym); const values = rows.map(r=>Number(r.total||0));
+          return { labels, values };
+        }
+        const catCol = cols.find(c=>['uf','faixa_vencimento','categoria','status'].includes(c)) || cols[0];
+        const valCol = cols.find(c=>['total','valor','vl_titulo','vl_total_repasse'].includes(c)) || cols.find(c=>typeof first[c]==='number') || cols[1];
+        const labels = rows.map(r=>String(r[catCol]));
+        const values = rows.map(r=>Number(r[valCol]||0));
+        return { labels, values };
+      }
+
+      function guessFmt(rows){
+        if(!rows || rows.length===0) return 'table';
+        const cols = Object.keys(rows[0]);
+        if(cols.includes('ym')) return 'line';
+        if(cols.includes('uf') || cols.includes('faixa_vencimento')) return 'bar';
+        if(typeof rows[0][cols[0]]==='string' && typeof rows[0][cols[1]]==='number') return 'bar';
+        return 'table';
+      }
+
+      // Gera uma paleta de cores distintas (Tailwind-inspired)
+      function buildColors(n){
+        const base = [
+          '#60a5fa','#f59e0b','#34d399','#f472b6','#f87171','#a78bfa','#fb7185','#22d3ee','#fbbf24','#4ade80','#c084fc','#fda4af'
+        ];
+        const out=[]; for(let i=0;i<n;i++){ out.push(hexWithAlpha(base[i % base.length], 0.6)); }
+        return out;
+      }
+      function hexWithAlpha(hex, alpha){
+        // hex like #rrggbb -> rgba
+        const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      }
+
+      // Troca de visão e salvar como padrão
+      document.getElementById('vizSelect').addEventListener('change', (e)=>{
+        if(!currentInd) return; renderChart(currentInd, currentRows, e.target.value);
+      });
+      document.getElementById('btnSaveFmt').addEventListener('click', async ()=>{
+        if(!currentInd) return; const fmt=document.getElementById('vizSelect').value;
+        await fetch(api(`/Indicadores/${currentInd.id}`), { method:'PATCH', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token()}` }, body: JSON.stringify({ fmt }) });
+        // atualiza fmt local e lista
+        currentInd.fmt = fmt; await loadList();
+      });
+
+      // Nova pasta: cria placeholder e filtro, pasta persiste após mover indicador\n      const newFolderBtn = document.getElementById('btnNewFolder');\n      if(newFolderBtn){\n        newFolderBtn.addEventListener('click', async ()=>{\n          const name = prompt('Nome da pasta'); if(!name) return;\n          window.__virtualFolders = window.__virtualFolders || [];\n          if(!window.__virtualFolders.includes(name)) window.__virtualFolders.push(name);\n          window.__catSel = name;\n          await loadList();\n        });\n      }\n    </script>
+  </body>
+  </html>
+
+
+
+
+
+
+
+
+
+
+

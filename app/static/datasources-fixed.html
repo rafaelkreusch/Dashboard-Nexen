@@ -1,0 +1,385 @@
+﻿<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nexen.ai — Fontes de Dados</title>
+    <link rel="stylesheet" href="/app/styles.css?v=2" />
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-slate-50 text-slate-800">
+    <div class="flex min-h-screen">
+      <aside class="w-72 bg-slate-900 text-slate-100 flex flex-col">
+        <div class="p-5 flex items-center gap-3 border-b border-slate-800">
+          <div class="rounded-lg">
+            <img src="/app/Nexen.ai.png" alt="Logo" class="w-8 h-8 object-contain rounded" />
+          </div>
+          <div>
+            <div class="text-lg font-semibold">Nexen.ai</div>
+            <div class="text-xs text-slate-400">Analytics Platform</div>
+          </div>
+        </div>
+        <nav class="p-3 flex-1">
+          
+<ul class="space-y-1 text-sm">
+  <li><a class="nav-item" href="/app/index2.html"><img src="/app/dashboardlogo.png" alt="" class="nav-icon" />Dashboard</a></li>
+  <li><a class="nav-item active" href="/app/datasources-fixed.html"><img src="/app/fontededados.png" alt="" class="nav-icon" />Fontes de Dados</a></li>
+  <li><a class="nav-item" href="/app/datasets-fixed.html"><img src="/app/conjuntodedados.png" alt="" class="nav-icon" />Conjuntos de Dados</a></li>
+  <li><a class="nav-item" href="/app/indicators-fixed.html"><img src="/app/indicadores.png" alt="" class="nav-icon" />Indicadores</a></li>
+</ul>
+<div class="mt-6 text-xs uppercase tracking-wide text-slate-400">Configuracao</div>
+<ul class="mt-2 space-y-1 text-sm">
+  <li><a class="nav-item" href="/app/org.html"><img src="/app/organizacao.png" alt="" class="nav-icon" />Organizacao</a></li>
+  <li><a class="nav-item" href="#"><img src="/app/configuracao.png" alt="" class="nav-icon" />Configuracoes</a></li>
+</ul>
+
+        </nav>
+        <div class="p-4 text-xs text-slate-400">v0.1.0</div>
+      </aside>
+
+      <main class="flex-1">
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6">
+          <div class="text-3xl font-extrabold">Fontes de Dados</div>
+          <div class="flex items-center gap-3">
+            <button id="btnAdd" class="btn-primary">+ Adicionar Fonte de Dados</button>
+            <a id="btnLogin" href="/app/login.html" class="btn hidden">Entrar</a>
+            <div id="profileArea" class="relative hidden">
+              <div id="avatar" class="w-9 h-9 rounded-full bg-indigo-500 text-white grid place-items-center text-sm font-bold cursor-pointer select-none">NX</div>
+              <div id="profileMenu" class="profile-menu hidden">
+                <button id="actionTheme"><span id="themeLabel">Modo noturno</span><span class="theme-badge" id="themeBadge">Desligado</span></button>
+                <button id="actionLogout">Sair</button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <section class="p-6">
+          <div class="mt-6" id="emptyState">
+            <div class="border border-slate-200 rounded-xl bg-white p-12 text-center">
+              <div class="text-2xl font-semibold">Nenhuma fonte cadastrada</div>
+              <div class="text-slate-500">Use o botão acima para criar fontes (CSV/XLSX, SQL ou Google Sheets).</div>
+            </div>
+          </div>
+          <div id="listContainer" class="hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" id="dsList"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Modal choose type / forms -->
+    <div id="modal" class="modal-backdrop">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="font-semibold">Nova Fonte de Dados</div>
+          <button id="btnClose" class="btn">×</button>
+        </div>
+        <div class="modal-body">
+          <div id="step1" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="md:col-span-2">
+              <div class="text-sm text-slate-600 mb-1">Código da Fonte de Dados (pasta)</div>
+              <input id="credorCode" class="w-full border rounded p-2" placeholder="ex: ELIAN" />
+            </div>
+            <div class="ds-tile" data-type="csv_upload">
+              <div class="rounded bg-green-100 text-green-600 p-2">CSV</div>
+              <div>
+                <div class="font-semibold">Upload CSV / Excel</div>
+                <div class="text-sm text-slate-500">Upload CSV ou XLSX</div>
+              </div>
+            </div>
+            <div class="ds-tile" data-type="google_sheets">
+              <div class="rounded bg-orange-100 text-orange-600 p-2">GS</div>
+              <div>
+                <div class="font-semibold">Google Sheets</div>
+                <div class="text-sm text-slate-500">Conectar via OAuth</div>
+              </div>
+            </div>
+            <div class="ds-tile" data-type="sql" data-driver="postgresql+psycopg2">
+              <div class="rounded bg-blue-100 text-blue-600 p-2">SQL</div>
+              <div>
+                <div class="font-semibold">Fonte SQL (URL)</div>
+                <div class="text-sm text-slate-500">Conectar por URL SQLAlchemy</div>
+              </div>
+            </div>
+          </div>
+
+          <form id="formSql" class="hidden space-y-3">
+            <div class="text-sm text-slate-600">Informe a URL SQLAlchemy</div>
+            <input id="sqlUrl" class="w-full border rounded p-2" placeholder="postgresql+psycopg2://user:pass@host:5432/db" />
+            <div class="flex gap-2">
+              <button id="btnSaveSql" class="btn-primary" type="submit">Salvar</button>
+              <button id="btnBack1" class="btn" type="button">Back</button>
+            </div>
+          </form>
+
+          <form id="formSheets" class="hidden space-y-3">
+            <div class="text-sm text-slate-600">Informe o Spreadsheet ID e Range</div>
+            <input id="sId" class="w-full border rounded p-2" placeholder="spreadsheet_id" />
+            <input id="sRange" class="w-full border rounded p-2" placeholder="Aba ou intervalo (ex: Plan1)" />
+            <div class="flex gap-2">
+              <button id="btnSaveSheets" class="btn-primary" type="submit">Salvar</button>
+              <button id="btnBack2" class="btn" type="button">Back</button>
+            </div>
+          </form>
+
+          <form id="formCsv" class="hidden space-y-3">
+            <div class="text-sm text-slate-600">Envie um CSV ou XLSX para ingestão imediata</div>
+            <input id="csvFile" type="file" accept=".csv,.xlsx" class="w-full" />
+            <div class="flex gap-2">
+              <button id="btnUploadCsv" class="btn-primary" type="submit">Enviar</button>
+              <button id="btnBack3" class="btn" type="button">Back</button>
+            </div>
+            <div id="csvMsg" class="text-sm"></div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script src="/app/theme.js"></script>
+    <script>
+      const api = (p) => `${location.origin}${p}`;
+      function token(){ return localStorage.getItem('token') || '' }
+      function setToken(t){ localStorage.setItem('token', t) }
+      const profileArea = document.getElementById('profileArea');
+      const avatarEl = document.getElementById('avatar');
+      const profileMenu = document.getElementById('profileMenu');
+      const themeBadge = document.getElementById('themeBadge');
+      const themeLabel = document.getElementById('themeLabel');
+      const btnLogin = document.getElementById('btnLogin');
+      const btnAdd = document.getElementById('btnAdd');
+
+      function showAuthButtons(){
+        const has = !!token();
+        btnLogin?.classList.toggle('hidden', has);
+        if(profileArea){
+          profileArea.classList.toggle('hidden', !has);
+          if(!has){
+            closeProfileMenu();
+            if(avatarEl){
+              avatarEl.textContent = 'NX';
+              avatarEl.removeAttribute('title');
+            }
+          }
+        }
+      }
+
+      function syncThemeUI(mode){
+        if(mode === 'dark'){
+          themeBadge?.classList.add('active');
+          if(themeBadge) themeBadge.textContent = 'Ligado';
+          if(themeLabel) themeLabel.textContent = 'Modo claro';
+        } else {
+          themeBadge?.classList.remove('active');
+          if(themeBadge) themeBadge.textContent = 'Desligado';
+          if(themeLabel) themeLabel.textContent = 'Modo noturno';
+        }
+      }
+
+      function initTheme(){
+        const mode = Theme.current();
+        Theme.apply(mode);
+        syncThemeUI(mode);
+      }
+
+      function toggleTheme(){
+        const mode = Theme.toggle();
+        syncThemeUI(mode);
+      }
+
+      async function ensureToken(){
+        if(token()) return true;
+        try {
+          const body = { email: 'dev@example.com', org_slug: 'demo', name: 'Dev User' };
+          const r = await fetch(api('/auth/dev-login'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+          if(!r.ok) return false;
+          const j = await r.json();
+          setToken(j.access_token);
+          return true;
+        } catch {
+          return false;
+        }
+      }
+
+      async function updateAvatar(){
+        if(!avatarEl) return;
+        if(!token()){
+          avatarEl.textContent = 'NX';
+          avatarEl.removeAttribute('title');
+          return;
+        }
+        try {
+          const r = await fetch(api('/auth/me'), { headers:{ Authorization:`Bearer ${token()}` } });
+          if(!r.ok){
+            if(r.status === 401) showAuthButtons();
+            return;
+          }
+          const data = await r.json();
+          const base = data.name || data.email || '';
+          const parts = base.trim().split(/\s+/).filter(Boolean);
+          let initials = 'NX';
+          if(parts.length === 1){
+            initials = parts[0].slice(0,2).toUpperCase();
+          } else if(parts.length > 1){
+            initials = (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+          }
+          avatarEl.textContent = initials;
+          avatarEl.title = base;
+        } catch (err) {
+          console.error('updateAvatar', err);
+        }
+      }
+
+      function closeProfileMenu(){ profileMenu?.classList.add('hidden'); }
+      function toggleProfileMenu(){ profileMenu?.classList.toggle('hidden'); }
+
+      function openModal(){ modal.style.display='flex'; step1.classList.remove('hidden'); formSql.classList.add('hidden'); formSheets.classList.add('hidden'); formCsv.classList.add('hidden'); }
+      function closeModal(){ modal.style.display='none'; }
+      const modal = document.getElementById('modal');
+      const step1 = document.getElementById('step1');
+      const formSql = document.getElementById('formSql');
+      const formSheets = document.getElementById('formSheets');
+      const formCsv = document.getElementById('formCsv');
+
+      document.getElementById('btnAdd').onclick = openModal;
+      document.getElementById('btnCreate2')?.addEventListener('click', openModal);
+      document.getElementById('btnClose').onclick = closeModal;
+      document.getElementById('btnBack1').onclick = () => { step1.classList.remove('hidden'); formSql.classList.add('hidden'); }
+      document.getElementById('btnBack2').onclick = () => { step1.classList.remove('hidden'); formSheets.classList.add('hidden'); }
+      document.getElementById('btnBack3').onclick = () => { step1.classList.remove('hidden'); formCsv.classList.add('hidden'); }
+
+      step1.querySelectorAll('.ds-tile').forEach(div => {
+        div.addEventListener('click', () => {
+          const type = div.dataset.type;
+          if(type==='sql') { step1.classList.add('hidden'); formSql.classList.remove('hidden'); }
+          else if(type==='google_sheets') { step1.classList.add('hidden'); formSheets.classList.remove('hidden'); }
+          else if(type==='csv_upload') { step1.classList.add('hidden'); formCsv.classList.remove('hidden'); }
+        });
+      });
+
+      async function loadList(){
+        const r = await fetch(api('/datasources'), { headers:{ Authorization:`Bearer ${token()}` }});
+        if(!r.ok) return;
+        const list = await r.json();
+        const empty = list.length===0;
+        document.getElementById('emptyState').classList.toggle('hidden', !empty);
+        document.getElementById('listContainer').classList.toggle('hidden', empty);
+        if(!empty){
+          const c = document.getElementById('dsList'); c.innerHTML='';
+          list.forEach(ds => {
+            const el = document.createElement('div');
+            el.className = 'card';
+            const code = (ds.config_json && ds.config_json.credor_code) ? ds.config_json.credor_code : '';
+            el.innerHTML = `<div class='text-xs text-slate-500'>${ds.type}${code? ' Â· '+code:''}</div><div class='font-semibold'>${(ds.sqlalchemy_url||'').slice(0,60)}</div><div class='text-xs text-slate-400 mt-1'>recorrente: ${ds.is_recurring? 'sim':'não'}</div>`;
+            const del = document.createElement('button'); del.className='btn text-rose-600 border-rose-200 mt-3'; del.textContent='Excluir';
+            del.onclick = async () => { if(!confirm('Excluir a fonte?')) return; await fetch(api(`/datasources/${ds.id}`), { method:'DELETE', headers:{ Authorization:`Bearer ${token()}` } }); loadList(); };
+            el.appendChild(del);
+            c.appendChild(el);
+          });
+        }
+      }
+
+      // SQL save
+      document.getElementById('formSql').addEventListener('submit', async (e) => {
+        e.preventDefault(); if(!await ensureToken()) return;
+        const sqlalchemy_url = document.getElementById('sqlUrl').value.trim();
+        const credor_code = document.getElementById('credorCode').value.trim() || null;
+        const body = { type:'sql', sqlalchemy_url, is_recurring:false, config_json: { credor_code } };
+        const r = await fetch(api('/datasources'), { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token()}` }, body: JSON.stringify(body) });
+        if(r.ok){ closeModal(); loadList(); }
+      });
+
+      // Sheets save
+      document.getElementById('formSheets').addEventListener('submit', async (e) => {
+        e.preventDefault(); if(!await ensureToken()) return;
+        const spreadsheet_id = document.getElementById('sId').value.trim();
+        const range = document.getElementById('sRange').value.trim();
+        const credor_code = document.getElementById('credorCode').value.trim() || null;
+        const body = { type:'google_sheets', config_json:{ spreadsheet_id, range, credor_code }, is_recurring:false };
+        const r = await fetch(api('/datasources'), { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token()}` }, body: JSON.stringify(body) });
+        if(r.ok){ closeModal(); loadList(); }
+      });
+
+      // CSV upload
+      document.getElementById('formCsv').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const msg = document.getElementById('csvMsg');
+        msg.textContent = 'Enviando arquivo…';
+        msg.className = 'text-sm text-slate-500';
+        try {
+          if(!await ensureToken()){
+            msg.textContent = 'Sessão expirada. Faça login novamente.';
+            msg.className = 'text-sm text-rose-600';
+            return;
+          }
+          const fileInput = document.getElementById('csvFile');
+          const f = fileInput.files[0];
+          if(!f){
+            msg.textContent = 'Selecione um arquivo CSV ou XLSX.';
+            msg.className = 'text-sm text-rose-600';
+            return;
+          }
+          const fd = new FormData(); fd.append('file', f);
+          const code = document.getElementById('credorCode').value.trim();
+          const endpoint = f.name.toLowerCase().endsWith('.xlsx') ? '/ingest/xlsx' : '/ingest/csv';
+          const resp = await fetch(api(`${endpoint}${code?`?credor_code=${encodeURIComponent(code)}`:''}`), {
+            method:'POST',
+            headers:{ Authorization:`Bearer ${token()}` },
+            body: fd,
+          });
+          if(resp.ok){
+            try {
+              await fetch(api('/datasources'), {
+                method:'POST',
+                headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token()}` },
+                body: JSON.stringify({ type:'csv_upload', config_json:{ filename: f.name, uploaded_at: new Date().toISOString(), credor_code: code||null }, is_recurring:false }),
+              });
+            } catch (err) {
+              console.error('registrar fonte', err);
+            }
+            msg.textContent = 'Upload concluído e fonte registrada.';
+            msg.className = 'text-sm text-emerald-600';
+            setTimeout(()=>{ closeModal(); loadList(); }, 800);
+          } else {
+            let txt = '';
+            try { txt = await resp.text(); } catch (err) { console.error('resp.text', err); }
+            if(txt && txt.length > 600){ txt = txt.slice(0,600) + '…'; }
+            msg.textContent = 'Falha no upload.' + (txt ? ` ${txt}` : '');
+            msg.className = 'text-sm text-rose-600';
+          }
+        } catch (err) {
+          console.error('upload fonte', err);
+          msg.textContent = 'Falha no upload. Verifique o arquivo e tente novamente.';
+          msg.className = 'text-sm text-rose-600';
+        }
+      });
+
+      const actionLogout = document.getElementById('actionLogout');
+      if(actionLogout){
+        actionLogout.addEventListener('click', () => {
+          localStorage.removeItem('token');
+          closeProfileMenu();
+          showAuthButtons();
+          updateAvatar();
+          location.href = '/app/login.html?next=/app/datasources-fixed.html';
+        });
+      }
+
+      const actionTheme = document.getElementById('actionTheme');
+      actionTheme?.addEventListener('click', toggleTheme);
+      avatarEl?.addEventListener('click', () => { if(token()) toggleProfileMenu(); });
+      document.addEventListener('click', (event) => {
+        if(!profileArea || profileArea.contains(event.target)) return;
+        closeProfileMenu();
+      });
+
+      initTheme();
+      showAuthButtons();
+      updateAvatar();
+      ensureToken().then((ok) => {
+        showAuthButtons();
+        updateAvatar();
+        if(ok) loadList();
+      });
+    </script>
+  </body>
+  </html>

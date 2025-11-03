@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nexen.ai — Indicadores</title>
+    <link rel="stylesheet" href="/app/styles.css?v=2" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  </head>
+  <body class="bg-slate-50 text-slate-800">
+    <div class="flex min-h-screen">
+      <aside class="w-72 bg-slate-900 text-slate-100 flex flex-col">
+        <div class="p-5 flex items-center gap-3 border-b border-slate-800">
+          <div class="rounded-lg">
+            <img src="/app/Nexen.ai.png" alt="Logo" class="w-8 h-8 object-contain rounded" />
+          </div>
+          <div>
+            <div class="text-lg font-semibold">Nexen.ai</div>
+            <div class="text-xs text-slate-400">Analytics Platform</div>
+          </div>
+        </div>
+        <nav class="p-3 flex-1">
+          <ul class="space-y-1 text-sm">
+            <li><a class="nav-item" href="/app/">Dashboard</a></li>
+            <li><a class="nav-item" href="/app/datasources-fixed.html">Fontes de Dados</a></li>
+            <li><a class="nav-item" href="/app/datasets-fixed.html">Conjuntos de Dados</a></li>
+            <li><a class="nav-item active" href="/app/indicators-fixed.html">Indicadores</a></li>
+          </ul>
+        </nav>
+        <div class="p-4 text-xs text-slate-400">v0.1.0</div>
+      </aside>
+
+      <main class="flex-1">
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6">
+          <div class="text-3xl font-extrabold">Indicadores</div>
+          <div class="flex items-center gap-3">
+            <button id="btnCreate" class="btn-primary flex items-center gap-2">+<span>Criar Indicador</span></button>
+            <a id="btnLogin" href="/app/login.html" class="btn hidden">Entrar</a>
+            <button id="btnLogout" class="btn hidden">Sair</button>
+          </div>
+        </header>
+
+        <section class="p-6">
+          <p class="text-slate-600">Defina métricas personalizadas com SQL e organize em pastas.</p>
+
+          <div class="mb-4 flex items-center gap-2">
+            <div id="catFilters" class="hidden flex flex-wrap gap-2 tabs"></div>
+            <div class="flex items-center gap-1">
+              <label for="globalCredorFilter" class="text-sm text-slate-600">Filtrar por código:</label>
+              <input id="globalCredorFilter" class="border rounded p-1 text-sm" style="width:160px" placeholder="ex: 9344" />
+            </div>
+            <button id="btnNewFolder" class="btn">+ Nova Pasta</button>
+          </div>
+
+          <div class="mt-6 border border-slate-200 rounded-xl bg-white p-12 text-center" id="emptyState">
+            <div class="grid place-items-center text-slate-500">Nenhum indicador ainda</div>
+            <button class="btn-primary mt-6" id="btnCreate2">+ Criar seu primeiro indicador</button>
+          </div>
+          <div id="listContainer" class="hidden">
+            <div id="list"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Modal criar indicador -->
+    <div id="modal" class="modal-backdrop">
+      <div class="modal" style="width:min(1040px,95vw)">
+        <div class="modal-header">
+          <div class="font-semibold">Criar Indicador</div>
+          <button id="btnClose" class="btn">✕</button>
+        </div>
+        <div class="modal-body">
+          
+          <form id="form" class="space-y-3">
+            <input id="key" class="w-full border rounded p-2" placeholder="Chave (ex: valor_mes_a_mes)" />
+            <input id="name" class="w-full border rounded p-2" placeholder="Nome" />
+            <input id="indCredorNew" class="w-full border rounded p-2" placeholder="Código do Conjunto de Dados (pasta)" />
+            <div class="flex gap-2">
+              <input id="cat" class="border rounded p-2 flex-1" list="catlist" placeholder="Pasta/Categoria (ex: Vendas)" />
+              <datalist id="catlist"></datalist>
+            </div>
+            <div class="text-sm text-slate-600">SQL (apenas SELECT; use {{tenant_id}})</div>
+            <textarea id="sql" class="w-full border rounded p-2 font-mono" rows="10"></textarea>
+            <div class="flex gap-2">
+              <button id="btnPreview" class="btn" type="button">Executar teste</button>
+              <button id="btnSave" class="btn-primary" type="submit">Salvar</button>
+              <div id="msg" class="text-sm"></div>
+            </div>
+          </form>
+          <div id="preview" class="mt-4 hidden">
+            <div class="text-sm text-slate-600 mb-2">Resultado</div>
+            <pre id="previewContent" class="bg-slate-900 text-slate-100 p-3 rounded max-h-72 overflow-auto text-xs"></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal visualizar indicador -->
+    <div id="modalView" class="modal-backdrop">
+      <div class="modal" style="width:min(1040px,95vw)">
+        <div class="modal-header">
+          <div class="font-semibold" id="viewTitle">Indicador</div>
+          <div class="flex items-center gap-2">
+            <label class="text-sm text-slate-600">Credor:</label>
+            <input id="credorInput" class="border rounded p-1 text-sm" style="width:140px" placeholder="ex: 9344" />
+            <label class="text-sm text-slate-600">Ano:</label>
+            <input id="yearInput" class="border rounded p-1 text-sm" style="width:90px" placeholder="YYYY" />
+            <label class="text-sm text-slate-600">Visão:</label>
+            <select id="vizSelect" class="border rounded p-1 text-sm">
+              <option value="table">Tabela</option>
+              <option value="bar">Barra</option>
+              <option value="line">Linha</option>
+              <option value="pie">Pizza</option>
+              <option value="map_br">Mapa Brasil</option>
+            </select>
+            <button id="btnCloseView" class="btn">✕</button>
+          </div>
+        </div>
+        <div class="modal-body">
+          <div id="emptyViz" class="text-slate-500 hidden">Sem dados</div>
+          <canvas id="chart" class="w-full" style="max-height:420px; display:none"></canvas>
+          <div id="ech" style="height:420px; display:none"></div>
+          <div id="tableWrap" class="overflow-auto hidden"><table id="tbl" class="min-w-full text-sm"></table></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const api = (p) => `${location.origin}${p}`;
+      function token(){ return localStorage.getItem('token') || '' }
+      function setToken(t){ localStorage.setItem('token', t) }
+      function showAuth(){ const has=!!token(); document.getElementById('btnLogin').classList.toggle('hidden', has); document.getElementById('btnLogout').classList.toggle('hidden', !has); }
+      async function ensureToken(){
+        if(token()) return true;
+        try {
+          const body = { email: 'dev@example.com', org_slug: 'demo', name: 'Dev User' };
+          const r = await fetch(api('/auth/dev-login'), { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(body) });
+          if(!r.ok) return false; const j = await r.json(); setToken(j.access_token); return true;
+        } catch { return false }
+      }
+
+      // Carregar lista
+      async function loadList(){
+        if(!token()){ const ok = await ensureToken(); if(!ok){ document.getElementById('emptyState').classList.remove('hidden'); return } }
+        const r = await fetch(api('/indicators'), { headers:{ Authorization:`Bearer ${token()}` }});
+        if(!r.ok){ return }
+        const list = await r.json();
+        const empty = list.length===0;
+        document.getElementById('emptyState').classList.toggle('hidden', !empty);
+        document.getElementById('listContainer').classList.toggle('hidden', empty);
+        if(empty) return;
+
+        // construir abas (pastas) fixas + existentes
+        const fixedTabs = ['Operação', 'Comercial', 'Colaboradores'];
+        const cats = Array.from(new Set([...fixedTabs, ...list.map(i => i.category).filter(Boolean)])).sort();
+        const catFilters = document.getElementById('catFilters');
+        catFilters.innerHTML = '';
+        if(cats.length){
+          const all = document.createElement('button');
+          all.className = 'tab' + (window.__catSel? '' : ' active'); all.textContent = 'Todos';
+          all.addEventListener('click', ()=>{ window.__catSel = null; renderList(list); loadList(); });
+          catFilters.appendChild(all);
+        }
+        cats.forEach(c => {
+          const b = document.createElement('button');
+          b.className = 'tab' + (window.__catSel===c ? ' active' : '');
+          b.textContent = c;
+          b.addEventListener('click', ()=>{ window.__catSel = (window.__catSel===c? null : c); renderList(list); loadList(); });
+          catFilters.appendChild(b);
+        });
+        catFilters.classList.toggle('hidden', cats.length===0);
+
+        renderList(list);
+        // popular datalist
+        const dl = document.getElementById('catlist'); dl.innerHTML = cats.map(c => `<option value="${c}">`).join('');
+      }
+
+      // Improve search placeholder/class without editing HTML text
+      document.addEventListener('DOMContentLoaded', () => {
+        const inp = document.getElementById('globalCredorFilter');
+        if(inp){ inp.placeholder = 'Pesquisar'; inp.classList.add('search-input'); }
+        const lab = document.querySelector('label[for="globalCredorFilter"]');
+        if(lab){ lab.style.position='absolute'; lab.style.left='-9999px'; lab.style.width='1px'; lab.style.height='1px'; lab.style.overflow='hidden'; }
+      });
+
+      function renderList(list){
+        const wrap = document.getElementById('list');
+        const catSel = window.__catSel || null;
+        const items = list.filter(i => !catSel || i.category === catSel);
+        wrap.innerHTML = '';
+        items.forEach(ind => {
+          const el = document.createElement('div');
+          el.className = 'card mb-2 flex items-center justify-between';
+          el.innerHTML = `<div class='cursor-pointer' data-open='1'><div class='font-semibold text-indigo-700 hover:underline'>${ind.name}</div><div class='text-xs text-slate-500'>${ind.key}${ind.category? ' · '+ind.category:''}${ind.credor_code? ' · '+ind.credor_code:''}</div></div>`;
+          // abrir ao clicar no título
+          el.querySelector('[data-open]')?.addEventListener('click', () => openIndicator(ind));
+          const actions = document.createElement('div'); actions.className='flex items-center gap-2 relative';
+          const btnMove = document.createElement('button'); btnMove.className='btn'; btnMove.textContent='Mover';
+          btnMove.onclick = async () => {
+            const cat = prompt('Mover para qual pasta?', ind.category || '');
+            if(cat===null) return;
+            await fetch(api(`/indicators/${ind.id}`), { method:'PATCH', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token()}` }, body: JSON.stringify({ category: cat }) });
+            loadList();
+          };
+          const btnMenu = document.createElement('button'); btnMenu.className='btn'; btnMenu.textContent='⋯';
+          const menu = document.createElement('div');
+          menu.className = 'absolute right-0 top-full mt-1 bg-white border rounded shadow hidden z-10';
+          menu.innerHTML = `
+            <button class='block px-3 py-2 text-sm hover:bg-slate-50' data-edit>Editar</button>
+            <button class='block px-3 py-2 text-sm text-rose-600 hover:bg-rose-50' data-del>Excluir</button>
+          `;
+          btnMenu.addEventListener('click', (e)=>{ e.stopPropagation(); menu.classList.toggle('hidden'); });
+          document.addEventListener('click', ()=> menu.classList.add('hidden'));
+          menu.querySelector('[data-edit]').addEventListener('click', async (e)=>{
+            e.stopPropagation(); menu.classList.add('hidden');
+            try {
+              const gi = await fetch(api(`/indicators/${ind.id}`), { headers:{ Authorization:`Bearer ${token()}` } });
+              if(gi.ok){
+                const it = await gi.json();
+                openModal();
+                document.getElementById('key').value = it.key || '';
+                document.getElementById('name').value = it.name || '';
+                document.getElementById('cat').value = it.category || '';
+                document.getElementById('sql').value = (it.formula_sql||'');
+              }
+            } catch{}
+          });
+          menu.querySelector('[data-del]').addEventListener('click', async (e)=>{
+            e.stopPropagation();
+            menu.classList.add('hidden');
+            if(!confirm('Excluir este indicador?')) return;
+            const r = await fetch(api(`/indicators/${ind.id}`), { method:'DELETE', headers:{ Authorization:`Bearer ${token()}` } });
+            if(r.ok){ loadList(); } else { alert('Falha ao excluir'); }
+          });
+          actions.appendChild(btnMove); actions.appendChild(btnMenu); actions.appendChild(menu);
+          el.appendChild(actions); wrap.appendChild(el);
+        });
+      }
+
+      // Modal
+      const modal = document.getElementById('modal');
+      function openModal(){ modal.style.display='flex' }
+      function closeModal(){ modal.style.display='none' }
+      document.getElementById('btnCreate').onclick = openModal;
+      document.getElementById('btnCreate2').onclick = openModal;
+      document.getElementById('btnClose').onclick = closeModal;
+
+      // Preview/Salvar
+      document.getElementById('btnPreview').addEventListener('click', async () => {
+        const key = document.getElementById('key').value.trim();
+        const name = document.getElementById('name').value.trim();
+        const category = document.getElementById('cat').value.trim() || null;
+        const formula_sql = document.getElementById('sql').value.trim();
+        const credor_code = (document.getElementById('indCredorNew')?.value.trim() || null);
+        const r = await fetch(api('/indicators/preview'), { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token()}` }, body: JSON.stringify({ key, name, formula_sql, category, credor_code }) });
+        const out = document.getElementById('previewContent'); const prev = document.getElementById('preview'); prev.classList.remove('hidden');
+        if(r.ok){ const j = await r.json(); out.textContent = JSON.stringify(j.rows, null, 2); }
+        else { out.textContent = 'Erro ao executar preview.' }
+      });
+      document.getElementById('form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const key = document.getElementById('key').value.trim();
+        const name = document.getElementById('name').value.trim();
+        const category = document.getElementById('cat').value.trim() || null;
+        const formula_sql = document.getElementById('sql').value.trim();
+        const credor_code = (document.getElementById('indCredorNew')?.value.trim() || null);
+        const msg = document.getElementById('msg');
+        const r = await fetch(api('/indicators'), { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token()}` }, body: JSON.stringify({ key, name, formula_sql, category, credor_code }) });
+        msg.textContent = r.ok ? 'Indicador salvo.' : 'Erro ao salvar.';
+        msg.className = r.ok ? 'text-sm text-emerald-600' : 'text-sm text-rose-600';
+        if(r.ok){ setTimeout(()=>{ closeModal(); loadList(); }, 600); }
+      });
+
+      
+
+      // Nova Pasta cria filtro e serve como sugestão para novos indicadores
+      document.getElementById('btnNewFolder').addEventListener('click', async () => {
+        const name = prompt('Nome da nova pasta:'); if(!name) return;
+        window.__catSel = name; loadList();
+      });
+
+      // Persistência do filtro global por código (para execução dos indicadores)
+      const globalIn = document.getElementById('globalCredorFilter');
+      if(globalIn){
+        globalIn.value = localStorage.getItem('filter_credor_code') || '';
+        globalIn.addEventListener('change', ()=>{
+          localStorage.setItem('filter_credor_code', globalIn.value.trim());
+        });
+      }
+
+      // Auth
+      document.getElementById('btnLogout').addEventListener('click', () => { localStorage.removeItem('token'); showAuth(); location.href = '/app/login.html?next=/app/indicators-fixed.html'; });
+      showAuth();
+      loadList();
+
+      // Visualização do indicador
+      let chart, currentRows=null, currentInd=null;
+      async function openIndicator(ind){ currentInd = ind; const ok = await ensureToken(); if(!ok){ alert('Faça login.'); return } runAndOpen(ind); }
+      let currentCredor = localStorage.getItem('filter_credor_code') || '';
+      document.getElementById('credorInput').value = currentCredor;
+      document.getElementById('credorInput').addEventListener('change', ()=>{
+        currentCredor = document.getElementById('credorInput').value.trim();
+        localStorage.setItem('filter_credor_code', currentCredor);
+        if(currentInd){ runAndOpen(currentInd); }
+      });
+      const yearInput = document.getElementById('yearInput');
+      let currentYear = localStorage.getItem('filter_year') || '';
+      if(yearInput){ yearInput.value = currentYear; }
+      yearInput?.addEventListener('change', ()=>{
+        currentYear = yearInput.value.trim();
+        localStorage.setItem('filter_year', currentYear);
+        if(currentInd){ runAndOpen(currentInd); }
+      });
+
+      async function runAndOpen(ind){
+        // se o indicador tem credor_code salvo, usa como padrão
+        if(ind && ind.credor_code){ currentCredor = ind.credor_code; document.getElementById('credorInput').value = currentCredor; }
+        const body = { credor_code: (currentCredor||null) };
+        if(currentYear){ body.from_ = `${currentYear}-01-01`; body.to = `${currentYear}-12-31`; }
+        const r = await fetch(api(`/indicators/${ind.id}/run`), { method:'POST', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token()}` }, body: JSON.stringify(body) });
+        if(!r.ok){
+          let msg = await r.text().catch(()=> '');
+          try { const j = JSON.parse(msg); msg = j.detail ? `\n${j.detail}` : msg } catch(e) {}
+          // tenta buscar a SQL salva para depuração
+          try {
+            const gi = await fetch(api(`/indicators/${ind.id}`), { headers:{ Authorization:`Bearer ${token()}` } });
+            if(gi.ok){
+              const it = await gi.json();
+              const prev = (it.formula_sql||'').slice(0,260);
+              msg += `\nSQL salva (início):\n${prev}`;
+            }
+          } catch {}
+          alert('Falha ao executar' + (msg? `\n${msg}`:''));
+          return;
+        }
+        const j = await r.json(); currentRows = j.rows || [];
+        document.getElementById('viewTitle').textContent = ind.name;
+        document.getElementById('modalView').style.display='flex';
+        const fmt = guessFmt(currentRows);
+        document.getElementById('vizSelect').value = fmt;
+        renderChart(fmt);
+      }
+
+      document.getElementById('btnCloseView').addEventListener('click', ()=>{ document.getElementById('modalView').style.display='none'; if(chart){ chart.destroy(); chart=null } });
+      document.getElementById('vizSelect').addEventListener('change', e=> renderChart(e.target.value));
+
+      function guessFmt(rows){
+        if(!rows || rows.length===0) return 'table';
+        const cols = Object.keys(rows[0]);
+        if(cols.includes('ym')) return 'line';
+        if(cols.includes('uf')) return 'map_br';
+        if(typeof rows[0][cols[0]]==='string' && typeof rows[0][cols[1]]==='number') return 'bar';
+        return 'table';
+      }
+
+      let ech = null;
+      function renderChart(fmt){
+        const canvas = document.getElementById('chart');
+        const tableWrap = document.getElementById('tableWrap');
+        const tbl = document.getElementById('tbl');
+        const empty = document.getElementById('emptyViz');
+        const echDiv = document.getElementById('ech');
+        empty.classList.add('hidden'); canvas.style.display='none'; tableWrap.classList.add('hidden'); echDiv.style.display='none';
+        if(chart){ try{ chart.destroy(); }catch{} chart=null }
+        if(ech){ try{ ech.dispose(); }catch{} ech=null }
+        const rows = currentRows || [];
+        if(rows.length===0){ empty.classList.remove('hidden'); return }
+        if(fmt==='map_br'){
+          // build data [{name:'São Paulo', value:number}] mapeando UF -> nome do estado
+          const first = rows[0]; const cols = Object.keys(first);
+          const ufCol = cols.find(c=>c.toLowerCase()==='uf') || cols[0];
+          const valCol = cols.find(c=>['total','valor','vl_titulo','vl_total_repasse'].includes(String(c).toLowerCase())) || cols.find(c=>typeof first[c]==='number') || cols[1];
+          const UF2NAME = { AC:'Acre', AL:'Alagoas', AP:'Amapá', AM:'Amazonas', BA:'Bahia', CE:'Ceará', DF:'Distrito Federal', ES:'Espírito Santo', GO:'Goiás', MA:'Maranhão', MT:'Mato Grosso', MS:'Mato Grosso do Sul', MG:'Minas Gerais', PA:'Pará', PB:'Paraíba', PR:'Paraná', PE:'Pernambuco', PI:'Piauí', RJ:'Rio de Janeiro', RN:'Rio Grande do Norte', RS:'Rio Grande do Sul', RO:'Rondônia', RR:'Roraima', SC:'Santa Catarina', SP:'São Paulo', SE:'Sergipe', TO:'Tocantins' };
+          function toNumber(x){ if(typeof x==='number') return x; const s=String(x||'').trim().replace(/\./g,'').replace(',','.'); const n=parseFloat(s); return isNaN(n)? 0 : n }
+          const data = rows.map(r => {
+            let u = String(r[ufCol]||'').toUpperCase();
+            const name = UF2NAME[u] || u || '(sem UF)';
+            return ({ name, value: toNumber(r[valCol]) });
+          });
+          echDiv.style.display='block';
+          fetchBrazilGeoJSON().then(geo => {
+            ech = echarts.init(echDiv);
+            echarts.registerMap('BR', geo);
+            ech.setOption({
+              tooltip:{ trigger:'item', formatter: (p)=> `${p.name}: ${brl(p.value)}` },
+              visualMap:{ type:'continuous', left:'left', min:0, max: Math.max(...data.map(d=>d.value)||[1]), text:['Alto','Baixo'], inRange:{ color:['#dbeafe','#60a5fa','#1d4ed8'] } },
+              series:[{ type:'map', map:'BR', data, name: currentInd?.name || 'Mapa', roam:true }]
+            });
+          }).catch(()=>{ empty.textContent='Falha ao carregar mapa'; empty.classList.remove('hidden') });
+          return;
+        }
+        if(fmt==='table'){
+          const cols = Object.keys(rows[0]);
+          tbl.innerHTML = `<thead><tr>${cols.map(c=>`<th class='text-left p-2 border-b'>${c}</th>`).join('')}</tr></thead>` +
+                          `<tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td class='p-2 border-b'>${formatCell(c, r[c])}</td>`).join('')}</tr>`).join('')}</tbody>`;
+          tableWrap.classList.remove('hidden');
+          return;
+        }
+        const labels = Object.keys(rows[0]);
+        const cat = labels[0];
+        const val = labels.find(k=>k!==cat) || labels[0];
+        const money = /total|valor|vl_/i.test(String(val));
+        const chartData = {
+          labels: rows.map(r=>String(r[cat])),
+          datasets: [{ label: currentInd?.name || 'Série', data: rows.map(r=>Number(r[val]||0)), backgroundColor: '#60a5fa', borderColor:'#1d4ed8' }]
+        };
+        const type = (fmt==='bar'||fmt==='line') ? fmt : 'pie';
+        canvas.style.display='block';
+        chart = new Chart(canvas, { type, data: chartData, options:{ responsive:true,
+          plugins: { tooltip: { callbacks: { label: (ctx)=> `${ctx.dataset.label}: ${ money ? brl(ctx.parsed.y ?? ctx.parsed) : num(ctx.parsed.y ?? ctx.parsed) }` } } },
+          scales: type==='pie'? {} : { y:{ beginAtZero:true, ticks:{ callback:(v)=> money ? brl(v) : num(v) } } }
+        } });
+      }
+
+      async function fetchBrazilGeoJSON(){
+        const urls = [
+          'https://cdn.jsdelivr.net/gh/codeforamerica/click_that_hood@main/public/data/brazil-states.geojson',
+          'https://fastly.jsdelivr.net/gh/codeforamerica/click_that_hood@main/public/data/brazil-states.geojson',
+          'https://geo.dataviz.cn/maps/geojson/brazil.json'
+        ];
+        let lastErr; for(const u of urls){ try{ const r = await fetch(u); if(r.ok) return await r.json(); }catch(e){ lastErr=e } }
+        throw lastErr || new Error('map fetch failed');
+      }
+
+      function brl(v){ const n=Number(v||0); return n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
+      function num(v){ const n=Number(v||0); return n.toLocaleString('pt-BR'); }
+      function isNumber(x){ return typeof x==='number' || (!isNaN(x) && x!=='' && x!==null); }
+      function formatCell(col, val){
+        if(isNumber(val) && /total|valor|vl_/.test(String(col))) return brl(val);
+        return val==null? '' : String(val);
+      }
+    </script>
+  </body>
+  </html>
+

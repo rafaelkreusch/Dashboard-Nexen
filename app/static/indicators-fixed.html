@@ -1,0 +1,1360 @@
+﻿<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Nexen.ai - Indicadores</title>
+    <link rel="stylesheet" href="/app/styles.css?v=2">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  </head>
+  <body class="bg-slate-50 text-slate-800">
+    <div class="flex min-h-screen">
+      <aside class="w-72 bg-slate-900 text-slate-100 flex flex-col">
+        <div class="p-5 flex items-center gap-3 border-b border-slate-800">
+          <img src="/app/Nexen.ai.png" alt="Logo Nexen.ai" class="w-8 h-8 object-contain rounded">
+          <div>
+            <div class="text-lg font-semibold">Nexen.ai</div>
+            <div class="text-xs text-slate-400">Analytics Platform</div>
+          </div>
+        </div>
+        <nav class="p-3 flex-1">
+          
+<ul class="space-y-1 text-sm">
+  <li><a class="nav-item" href="/app/index2.html"><img src="/app/dashboardlogo.png" alt="" class="nav-icon" />Dashboard</a></li>
+  <li><a class="nav-item" href="/app/datasources-fixed.html"><img src="/app/fontededados.png" alt="" class="nav-icon" />Fontes de Dados</a></li>
+  <li><a class="nav-item" href="/app/datasets-fixed.html"><img src="/app/conjuntodedados.png" alt="" class="nav-icon" />Conjuntos de Dados</a></li>
+  <li><a class="nav-item active" href="/app/indicators-fixed.html"><img src="/app/indicadores.png" alt="" class="nav-icon" />Indicadores</a></li>
+</ul>
+<div class="mt-6 text-xs uppercase tracking-wide text-slate-400">Configuracao</div>
+<ul class="mt-2 space-y-1 text-sm">
+  <li><a class="nav-item" href="/app/org.html"><img src="/app/organizacao.png" alt="" class="nav-icon" />Organizacao</a></li>
+  <li><a class="nav-item" href="#"><img src="/app/configuracao.png" alt="" class="nav-icon" />Configuracoes</a></li>
+</ul>
+
+        </nav>
+        <div class="p-4 text-xs text-slate-400">v0.1.0</div>
+      </aside>
+
+      <main class="flex-1">
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6">
+          <div class="text-3xl font-extrabold">Indicadores</div>
+          <div class="flex items-center gap-3">
+            <button id="btnCreate" class="btn-primary flex items-center gap-2">
+              <span>+</span>
+              <span>Criar indicador</span>
+            </button>
+            <a id="btnLogin" href="/app/login.html" class="btn hidden">Entrar</a>
+            <button id="btnLogout" class="btn hidden">Sair</button>
+          </div>
+        </header>
+
+        <section class="p-6 space-y-6">
+          <div class="space-y-3">
+            <p class="text-slate-600">Defina metricas personalizadas usando SQL, organize em pastas e acompanhe seus dados em minutos.</p>
+            <div class="flex flex-wrap gap-3 items-center">
+              <label class="sr-only" for="searchInput">Buscar indicador</label>
+              <input id="searchInput" class="search-input" type="text" placeholder="Buscar por nome ou chave">
+              <label class="sr-only" for="credorFilter">Filtrar por credor</label>
+              <input id="credorFilter" class="search-input" type="text" placeholder="Filtrar por credor">
+              <button id="btnNewFolder" class="btn">+ Nova pasta</button>
+            </div>
+            <div id="folderTabs" class="tabs hidden"></div>
+          </div>
+
+          <div id="emptyState" class="border border-slate-200 rounded-xl bg-white p-12 text-center">
+            <div class="text-2xl font-semibold text-slate-700">Nenhum indicador encontrado</div>
+            <div class="text-slate-500 mt-2">Crie um indicador para transformar consultas SQL em valores, tabelas ou graficos.</div>
+            <button id="btnCreateFirst" class="btn-primary mt-6 flex gap-2 justify-center mx-auto px-6 py-3">
+              <span>+</span>
+              <span>Criar primeiro indicador</span>
+            </button>
+          </div>
+
+          <div id="listContainer" class="hidden">
+            <div id="indicatorList" class="grid grid-cols-1 xl:grid-cols-2 gap-4"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="modalCreate" class="modal-backdrop">
+      <div class="modal max-w-3xl" role="dialog" aria-modal="true">
+        <div class="modal-header">
+          <div class="font-semibold text-lg" id="modalCreateTitle">Criar indicador</div>
+          <button id="modalCreateClose" class="btn" type="button">Fechar</button>
+        </div>
+        <div class="modal-body space-y-4">
+          <form id="formIndicator" class="space-y-3">
+            <div class="grid md:grid-cols-2 gap-3">
+              <label class="flex flex-col gap-1 text-sm text-slate-600">
+                Chave
+                <input id="fieldKey" class="border rounded p-2" placeholder="ex: valor_mes_a_mes" required>
+              </label>
+              <label class="flex flex-col gap-1 text-sm text-slate-600">
+                Nome
+                <input id="fieldName" class="border rounded p-2" placeholder="Nome visivel" required>
+              </label>
+            </div>
+            <div class="grid md:grid-cols-3 gap-3">
+              <label class="flex flex-col gap-1 text-sm text-slate-600">
+                Categoria
+                <input id="fieldCategory" class="border rounded p-2" placeholder="Pasta opcional" list="categoryOptions">
+                <datalist id="categoryOptions"></datalist>
+              </label>
+              <label class="flex flex-col gap-1 text-sm text-slate-600">
+                Dataset
+                <input id="fieldDataset" class="border rounded p-2" placeholder="Dataset relacionado">
+              </label>
+              <label class="flex flex-col gap-1 text-sm text-slate-600">
+                Credor
+                <input id="fieldCredor" class="border rounded p-2" placeholder="Codigo credor">
+              </label>
+            </div>
+            <label class="flex flex-col gap-1 text-sm text-slate-600">
+              Formato padrao
+              <select id="fieldFmt" class="border rounded p-2">
+                <option value="">Auto</option>
+                <option value="table">Tabela</option>
+                <option value="bar">Barra</option>
+                <option value="line">Linha</option>
+                <option value="kpi">KPI</option>
+              </select>
+            </label>
+            <label class="flex flex-col gap-1 text-sm text-slate-600">
+              SQL do indicador
+              <textarea id="fieldSql" class="border rounded p-2 font-mono text-sm" rows="8" placeholder="Somente SELECT. Use {{tenant_id}} para filtrar por organizacao." required></textarea>
+            </label>
+            <div class="flex gap-2 items-center">
+              <button id="btnSaveIndicator" class="btn-primary" type="submit">Salvar indicador</button>
+              <div id="formMessage" class="text-sm text-slate-600"></div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div id="modalFolder" class="modal-backdrop">
+      <div class="modal max-w-md" role="dialog" aria-modal="true">
+        <div class="modal-header">
+          <div class="font-semibold text-lg" id="modalFolderTitle">Nova pasta</div>
+          <button id="modalFolderClose" class="btn" type="button">Fechar</button>
+        </div>
+        <div class="modal-body space-y-4">
+          <form id="folderForm" class="space-y-3">
+            <label class="flex flex-col gap-1 text-sm text-slate-600">
+              Nome
+              <input id="folderName" class="border rounded p-2" placeholder="Ex: Comercial" required>
+            </label>
+            <label class="flex flex-col gap-1 text-sm text-slate-600">
+              Cor da etiqueta
+              <input id="folderColor" type="color" class="border rounded p-2 h-10 w-24" value="#6366f1">
+            </label>
+            <div class="flex gap-2">
+              <button id="btnSaveFolder" class="btn-primary" type="submit">Salvar pasta</button>
+              <div id="folderMessage" class="text-sm text-slate-600"></div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div id="modalView" class="modal-backdrop">
+      <div class="modal max-w-4xl" role="dialog" aria-modal="true">
+        <div class="modal-header">
+          <div>
+            <div class="font-semibold text-lg" id="viewTitle">Indicador</div>
+            <div class="text-xs text-slate-500" id="viewMeta"></div>
+          </div>
+          <div class="flex gap-2">
+            <button id="btnDelete" class="btn" type="button">Excluir</button>
+            <button id="btnFullscreen" class="btn" type="button">Tela cheia</button>
+            <button id="btnCloseView" class="btn" type="button">Fechar</button>
+          </div>
+        </div>
+        <div class="modal-body space-y-4">
+          <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-3 text-sm text-slate-600">
+            <label class="flex flex-col gap-1">
+              De
+              <input id="runFrom" type="date" class="border rounded p-2">
+            </label>
+            <label class="flex flex-col gap-1">
+              Ate
+              <input id="runTo" type="date" class="border rounded p-2">
+            </label>
+            <label class="flex flex-col gap-1">
+              Credor
+              <input id="runCredor" type="text" class="border rounded p-2">
+            </label>
+            <label class="flex flex-col gap-1">
+              UF
+              <input id="runUf" type="text" maxlength="2" class="border rounded p-2 uppercase">
+            </label>
+          </div>
+          <div class="grid md:grid-cols-3 gap-3 text-sm text-slate-600">
+            <label class="flex flex-col gap-1">
+              Situacao
+              <input id="runSituacao" type="text" class="border rounded p-2">
+            </label>
+            <label class="flex flex-col gap-1">
+              Campo de data
+              <input id="runDateField" type="text" class="border rounded p-2" placeholder="ex: dt_cadastro" value="dt_cadastro">
+            </label>
+            <label class="flex flex-col gap-1">
+              Formato
+              <select id="viewFmt" class="border rounded p-2">
+                <option value="auto">Auto</option>
+                <option value="table">Tabela</option>
+                <option value="bar">Barra</option>
+                <option value="combo">Barra + Linha</option>
+                <option value="line">Linha</option>
+                <option value="map_br">Mapa (BR)</option>
+                <option value="kpi">KPI</option>
+              </select>
+            </label>
+          </div>
+          <div class="flex gap-2">
+            <button id="btnRun" class="btn-primary" type="button">Executar</button>
+            <button id="btnRememberFmt" class="btn" type="button">Salvar formato padrao</button>
+            <button id="btnEdit" class="btn" type="button">Editar indicador</button>
+            <div id="viewMessage" class="text-sm text-slate-600"></div>
+          </div>
+          <div id="resultEmpty" class="hidden border border-dashed border-slate-300 rounded p-8 text-center text-slate-500">
+            Nenhum dado retornado.
+          </div>
+          <div id="resultKpi" class="hidden border rounded p-10 text-center bg-white">
+            <div class="text-xs uppercase tracking-wide text-slate-500">Valor</div>
+            <div id="kpiValue" class="text-4xl font-semibold text-slate-800 mt-2">-</div>
+          </div>
+          <div id="resultChart" class="hidden border rounded p-4 bg-white">
+            <canvas id="chartCanvas"></canvas>
+          </div>
+          <div id="resultMap" class="hidden border rounded bg-white p-4">
+            <div id="mapContainer" style="width:100%; height:100%;"></div>
+          </div>
+          <div id="resultTable" class="hidden border rounded bg-white overflow-auto max-h-80">
+            <table class="min-w-full text-sm text-slate-700">
+              <thead id="tableHead"></thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="indicatorFullscreen" class="fullscreen-overlay">
+      <div class="fullscreen-shell" role="dialog" aria-modal="true">
+        <div class="fullscreen-header">
+          <div id="fullscreenTitle" class="text-lg font-semibold">Indicador</div>
+          <button id="btnCloseFullscreen" class="btn" type="button">Fechar</button>
+        </div>
+        <div id="fullscreenBody" class="fullscreen-body"></div>
+      </div>
+    </div>
+
+    <script src="/app/theme.js"></script>
+    <script>
+      if (window.Theme && typeof window.Theme.init === 'function') {
+        window.Theme.init();
+      }
+      const api = (path) => `${location.origin}${path}`;
+      const state = { indicators: [], categories: [], cat: null, search: '', credor: '' };
+      const DEFAULT_DATE_FIELD = 'dt_cadastro';
+      let current = null;
+      let currentRows = [];
+      let chart = null;
+      let ech = null;
+      let brazilGeoPromise = null;
+
+      const categoryPalette = ['#6366f1', '#f97316', '#10b981', '#ef4444', '#14b8a6', '#8b5cf6', '#f59e0b', '#ec4899', '#0ea5e9', '#22c55e'];
+      function fallbackCategoryColor(name) {
+        if (!name) return '#94a3b8';
+        let hash = 0;
+        for (let i = 0; i < name.length; i++) {
+          hash = (hash << 5) - hash + name.charCodeAt(i);
+          hash |= 0;
+        }
+        const idx = Math.abs(hash) % categoryPalette.length;
+        return categoryPalette[idx];
+      }
+
+      function getCategoryColor(name) {
+        if (!name) return '#94a3b8';
+        const entry = state.categories.find((cat) => cat.name === name);
+        if (entry && entry.color) return entry.color;
+        return fallbackCategoryColor(name);
+      }
+
+      const $ = (id) => document.getElementById(id);
+      const els = {
+        btnLogin: $('btnLogin'),
+        btnLogout: $('btnLogout'),
+        btnCreate: $('btnCreate'),
+        btnCreateFirst: $('btnCreateFirst'),
+        btnNewFolder: $('btnNewFolder'),
+        folderTabs: $('folderTabs'),
+        indicatorList: $('indicatorList'),
+        emptyState: $('emptyState'),
+        listContainer: $('listContainer'),
+        searchInput: $('searchInput'),
+        credorFilter: $('credorFilter'),
+        modalFolder: $('modalFolder'),
+        modalFolderClose: $('modalFolderClose'),
+        modalCreate: $('modalCreate'),
+        modalView: $('modalView'),
+        modalCreateTitle: $('modalCreateTitle'),
+        folderForm: $('folderForm'),
+        folderName: $('folderName'),
+        folderColor: $('folderColor'),
+        folderMessage: $('folderMessage'),
+        modalFolderTitle: $('modalFolderTitle'),
+        form: $('formIndicator'),
+        fieldKey: $('fieldKey'),
+        fieldName: $('fieldName'),
+        fieldCategory: $('fieldCategory'),
+        categoryOptions: $('categoryOptions'),
+        fieldDataset: $('fieldDataset'),
+        fieldCredor: $('fieldCredor'),
+        fieldFmt: $('fieldFmt'),
+        fieldSql: $('fieldSql'),
+        formMessage: $('formMessage'),
+        viewTitle: $('viewTitle'),
+        viewMeta: $('viewMeta'),
+        viewFmt: $('viewFmt'),
+        viewMessage: $('viewMessage'),
+        btnFullscreen: $('btnFullscreen'),
+        resultEmpty: $('resultEmpty'),
+        resultKpi: $('resultKpi'),
+        kpiValue: $('kpiValue'),
+        resultChart: $('resultChart'),
+        chartCanvas: $('chartCanvas'),
+        resultTable: $('resultTable'),
+        resultMap: $('resultMap'),
+        mapContainer: $('mapContainer'),
+        tableHead: $('tableHead'),
+        tableBody: $('tableBody'),
+        runFrom: $('runFrom'),
+        runTo: $('runTo'),
+        runCredor: $('runCredor'),
+        runUf: $('runUf'),
+        runSituacao: $('runSituacao'),
+        runDateField: $('runDateField')
+      };
+
+      function hideElement(el) {
+        if (!el) return;
+        el.classList.add('hidden');
+        el.style.display = 'none';
+      }
+
+      function showElement(el, display = 'block') {
+        if (!el) return;
+        el.classList.remove('hidden');
+        el.style.display = display;
+      }
+
+      const modalBackdrops = [els.modalCreate, els.modalView, els.modalFolder];
+      modalBackdrops.forEach((backdrop) => {
+        if (!backdrop) return;
+        backdrop.addEventListener('click', (evt) => {
+          if (evt.target === backdrop) hideModal(backdrop);
+        });
+      });
+
+      let activeFolderMenu = null;
+      function closeActiveMenu() {
+        if (activeFolderMenu) {
+          activeFolderMenu.classList.add('hidden');
+          activeFolderMenu = null;
+        }
+      }
+      document.addEventListener('click', closeActiveMenu);
+
+      const fullscreenState = {
+        overlay: $('indicatorFullscreen'),
+        body: $('fullscreenBody'),
+        title: $('fullscreenTitle'),
+        closeBtn: $('btnCloseFullscreen'),
+        activeEl: null,
+        parent: null,
+        nextSibling: null,
+        previousHeight: '',
+        previousMapHeight: ''
+      };
+      let isViewFullscreen = false;
+
+      function computeResultHeight() {
+        const viewport = Math.max(window.innerHeight || 0, 720);
+        const base = Math.min(Math.max(viewport - 360, 300), 520);
+        return base;
+      }
+
+      function applyResultHeight() {
+        const targetHeight = computeResultHeight();
+        if (els.resultChart) {
+          els.resultChart.style.minHeight = `${targetHeight}px`;
+          els.resultChart.style.height = `${targetHeight}px`;
+        }
+        if (els.resultMap) {
+          els.resultMap.style.minHeight = `${targetHeight}px`;
+          els.resultMap.style.height = `${targetHeight}px`;
+        }
+        if (els.mapContainer) {
+          els.mapContainer.style.minHeight = `${Math.max(targetHeight - 40, 240)}px`;
+          els.mapContainer.style.height = `${Math.max(targetHeight - 40, 240)}px`;
+        }
+        if (chart && typeof chart.resize === 'function') {
+          try { chart.resize(); } catch (err) { console.error('chart resize', err); }
+        }
+        if (ech && typeof ech.resize === 'function') {
+          try { ech.resize(); } catch (err) { console.error('map resize', err); }
+        }
+      }
+
+      function isResultVisible(el) {
+        return el && !el.classList.contains('hidden');
+      }
+
+      function getActiveResultElement() {
+        if (isResultVisible(els.resultMap)) return els.resultMap;
+        if (isResultVisible(els.resultChart)) return els.resultChart;
+        if (isResultVisible(els.resultTable)) return els.resultTable;
+        if (isResultVisible(els.resultKpi)) return els.resultKpi;
+        if (isResultVisible(els.resultEmpty)) return els.resultEmpty;
+        return null;
+      }
+
+      function openResultFullscreen() {
+        if (!currentRows || currentRows.length === 0) return;
+        const el = getActiveResultElement();
+        if (!el || !fullscreenState.overlay) return;
+        fullscreenState.parent = el.parentElement;
+        fullscreenState.nextSibling = el.nextElementSibling;
+        fullscreenState.previousHeight = el.style.height;
+        fullscreenState.activeEl = el;
+        fullscreenState.overlay.classList.add('open');
+        fullscreenState.overlay.style.display = 'flex';
+        fullscreenState.title.textContent = current?.name || 'Indicador';
+        el.classList.add('fullscreen-result');
+        el.style.height = '100%';
+        if (el === els.resultMap && els.mapContainer) {
+          fullscreenState.previousMapHeight = els.mapContainer.style.height;
+          els.mapContainer.style.height = '100%';
+        }
+        fullscreenState.body.innerHTML = '';
+        fullscreenState.body.appendChild(el);
+        setTimeout(() => {
+          if (el === els.resultMap && ech) {
+            try { ech.resize(); } catch (err) { console.error('resize map fullscreen', err); }
+          }
+          if (el === els.resultChart && chart) {
+            try { chart.resize(); } catch (err) { console.error('chart resize fullscreen', err); }
+          }
+        }, 60);
+      }
+
+      function setFullscreen(enabled) {
+        enabled = !!enabled && !!currentRows && currentRows.length > 0;
+        if (!fullscreenState.overlay) {
+          isViewFullscreen = false;
+          return;
+        }
+        if (enabled === isViewFullscreen) {
+          if (enabled) applyResultHeight();
+          return;
+        }
+        isViewFullscreen = enabled;
+        if (els.btnFullscreen) {
+          els.btnFullscreen.textContent = enabled ? 'Janela normal' : 'Tela cheia';
+        }
+        if (enabled) {
+          openResultFullscreen();
+        } else {
+          closeResultFullscreen();
+        }
+        applyResultHeight();
+      }
+
+      if (fullscreenState.closeBtn) {
+        fullscreenState.closeBtn.addEventListener('click', () => setFullscreen(false));
+      }
+      if (fullscreenState.overlay) {
+        fullscreenState.overlay.addEventListener('click', (evt) => {
+          if (evt.target === fullscreenState.overlay) {
+            setFullscreen(false);
+          }
+        });
+      }
+
+      function closeResultFullscreen() {
+        const el = fullscreenState.activeEl;
+        if (!el) {
+          if (fullscreenState.overlay) {
+            fullscreenState.overlay.classList.remove('open');
+            fullscreenState.overlay.style.display = 'none';
+          }
+          return;
+        }
+        el.classList.remove('fullscreen-result');
+        el.style.height = fullscreenState.previousHeight || '';
+        if (el === els.resultMap && els.mapContainer) {
+          els.mapContainer.style.height = fullscreenState.previousMapHeight || '';
+        }
+        const parent = fullscreenState.parent;
+        const next = fullscreenState.nextSibling;
+        if (parent) {
+          if (next) parent.insertBefore(el, next); else parent.appendChild(el);
+        }
+        if (fullscreenState.overlay) {
+          fullscreenState.overlay.classList.remove('open');
+          fullscreenState.overlay.style.display = 'none';
+        }
+        fullscreenState.activeEl = null;
+        fullscreenState.parent = null;
+        fullscreenState.nextSibling = null;
+        fullscreenState.previousHeight = '';
+        fullscreenState.previousMapHeight = '';
+        setTimeout(() => {
+          if (el === els.resultMap && ech) {
+            try { ech.resize(); } catch (err) { console.error('resize map back', err); }
+          }
+          if (el === els.resultChart && chart) {
+            try { chart.resize(); } catch (err) { console.error('chart resize back', err); }
+          }
+        }, 60);
+      }
+
+
+      function token() { return localStorage.getItem('token') || ''; }
+      function hasToken() { return !!token(); }
+      function authHeaders(extra) { return Object.assign({ Authorization: `Bearer ${token()}` }, extra || {}); }
+      function setAuthButtons() {
+        const logged = hasToken();
+        els.btnLogin.classList.toggle('hidden', logged);
+        els.btnLogout.classList.toggle('hidden', !logged);
+        els.btnCreate.classList.toggle('hidden', !logged);
+        els.btnCreateFirst.classList.toggle('hidden', !logged);
+        els.btnNewFolder.classList.toggle('hidden', !logged);
+      }
+      function showModal(el) {
+        if (el === els.modalView) {
+          setFullscreen(false);
+        }
+        el.style.display = 'flex';
+      }
+      function hideModal(el) {
+        el.style.display = 'none';
+        if (el === els.modalView) {
+          setFullscreen(false);
+        }
+      }
+      function requireAuth() {
+        if (hasToken()) return true;
+        alert('Faca login para continuar.');
+        return false;
+      }
+      function handle401() {
+        localStorage.removeItem('token');
+        setAuthButtons();
+        alert('Sessao expirada. Faca login novamente.');
+      }
+
+      async function fetchIndicators() {
+        if (!hasToken()) { state.indicators = []; state.categories = []; return; }
+        const [listResp, catResp] = await Promise.all([
+          fetch(api('/indicators'), { headers: authHeaders() }),
+          fetch(api('/indicators/categories'), { headers: authHeaders() })
+        ]);
+        if (listResp.status === 401 || catResp.status === 401) { handle401(); return; }
+        state.indicators = listResp.ok ? await listResp.json() : [];
+        let categories = catResp.ok ? await catResp.json() : [];
+        if (!Array.isArray(categories)) categories = [];
+        state.categories = categories.map((item) => {
+          if (typeof item === 'string') return { name: item, color: null };
+          if (!item || !item.name) return null;
+          return { name: item.name, color: item.color || null };
+        }).filter(Boolean);
+      }
+
+      function buildCategoryMap() {
+        const map = new Map();
+        (state.categories || []).forEach((cat) => {
+          if (cat && cat.name) map.set(cat.name, cat.color || null);
+        });
+        state.indicators.forEach((ind) => {
+          if (ind.category && !map.has(ind.category)) {
+            map.set(ind.category, null);
+          }
+        });
+        return map;
+      }
+
+      function updateCategoryOptions(names) {
+        if (!els.categoryOptions) return;
+        els.categoryOptions.innerHTML = '';
+        names.forEach((name) => {
+          const opt = document.createElement('option');
+          opt.value = name;
+          els.categoryOptions.appendChild(opt);
+        });
+      }
+
+      function createMetaChip(text, color) {
+        const span = document.createElement('span');
+        span.className = 'meta-chip';
+        if (color) {
+          const dot = document.createElement('span');
+          dot.className = 'badge-dot';
+          dot.style.background = color;
+          span.appendChild(dot);
+          span.appendChild(document.createTextNode(text));
+        } else {
+          span.textContent = text;
+        }
+        return span;
+      }
+
+      function createCategoryTab(cat, isActive) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'tab-wrapper';
+
+        const resolvedColor = cat.color || getCategoryColor(cat.name);
+        const dataForActions = { name: cat.name, color: cat.color || resolvedColor };
+
+        const selectBtn = document.createElement('button');
+        selectBtn.className = 'tab';
+        if (isActive) selectBtn.classList.add('active');
+        const dot = document.createElement('span');
+        dot.className = 'tab-dot';
+        dot.style.background = resolvedColor;
+        const text = document.createElement('span');
+        text.className = 'txt';
+        text.textContent = cat.name;
+        selectBtn.append(dot, text);
+        selectBtn.addEventListener('click', (evt) => {
+          evt.stopPropagation();
+          closeActiveMenu();
+          state.cat = cat.isDefault ? null : cat.name;
+          renderTabs();
+          renderList();
+        });
+        wrapper.appendChild(selectBtn);
+
+        if (!cat.isDefault) {
+          const menuBtn = document.createElement('button');
+          menuBtn.className = 'tab-menu';
+          menuBtn.type = 'button';
+          menuBtn.innerHTML = '⋮';
+          wrapper.appendChild(menuBtn);
+
+          const panel = document.createElement('div');
+          panel.className = 'tab-menu-panel hidden';
+          panel.innerHTML = '<button type="button" class="tab-menu-item tab-menu-edit">Editar</button><button type="button" class="tab-menu-item tab-menu-delete">Excluir</button>';
+          wrapper.appendChild(panel);
+          panel.addEventListener('click', (evt) => evt.stopPropagation());
+
+          menuBtn.addEventListener('click', (evt) => {
+            evt.stopPropagation();
+            if (activeFolderMenu && activeFolderMenu !== panel) {
+              closeActiveMenu();
+            }
+            panel.classList.toggle('hidden');
+            activeFolderMenu = panel.classList.contains('hidden') ? null : panel;
+          });
+
+          panel.querySelector('.tab-menu-edit').addEventListener('click', (evt) => {
+            evt.stopPropagation();
+            closeActiveMenu();
+            openFolderModal(dataForActions);
+          });
+
+          panel.querySelector('.tab-menu-delete').addEventListener('click', async (evt) => {
+            evt.stopPropagation();
+            closeActiveMenu();
+            await deleteFolder(dataForActions);
+          });
+        }
+
+        return wrapper;
+      }
+
+      function renderTabs() {
+        const tabs = els.folderTabs;
+        closeActiveMenu();
+        tabs.innerHTML = '';
+        const map = buildCategoryMap();
+        const entries = Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+        if (state.indicators.length === 0 && entries.length === 0) {
+          tabs.classList.add('hidden');
+          updateCategoryOptions([]);
+          return;
+        }
+
+        const allTab = createCategoryTab({ name: 'Todos', color: '#94a3b8', isDefault: true }, state.cat === null);
+        tabs.appendChild(allTab);
+
+        entries.forEach(([name, color]) => {
+          const catData = state.categories.find((cat) => cat.name === name) || { name, color: color || null };
+          const tabEl = createCategoryTab({ name, color: catData.color || color || null, isDefault: false }, state.cat === name);
+          tabs.appendChild(tabEl);
+        });
+
+        updateCategoryOptions(entries.map(([name]) => name));
+        tabs.classList.remove('hidden');
+      }
+
+      function applyFilters(ind) {
+        if (state.cat && (ind.category || '') !== state.cat) return false;
+        if (state.search) {
+          const q = state.search;
+          if (!((ind.name || '').toLowerCase().includes(q) || (ind.key || '').toLowerCase().includes(q))) return false;
+        }
+        if (state.credor) {
+          const c = (ind.credor_code || '').toLowerCase();
+          if (!c.includes(state.credor)) return false;
+        }
+        return true;
+      }
+
+      function renderList() {
+        const items = state.indicators.filter(applyFilters);
+        els.indicatorList.innerHTML = '';
+        if (items.length === 0) {
+          els.emptyState.classList.remove('hidden');
+          els.listContainer.classList.add('hidden');
+          return;
+        }
+        els.emptyState.classList.add('hidden');
+        els.listContainer.classList.remove('hidden');
+        items.forEach((ind) => {
+          const card = document.createElement('div');
+          card.className = 'card flex flex-col gap-4';
+          card.innerHTML = `
+            <div>
+              <div class="text-base font-semibold text-slate-800">${ind.name || '-'}</div>
+              <div class="text-xs text-slate-500 mt-1">${ind.key || ''}</div>
+            </div>
+            <div class="indicator-meta text-xs text-slate-500 flex flex-wrap gap-2"></div>
+          `;
+          const meta = card.querySelector('.indicator-meta');
+          if (ind.category) {
+            meta.appendChild(createMetaChip(ind.category, getCategoryColor(ind.category)));
+          }
+          if (ind.dataset) {
+            meta.appendChild(createMetaChip(`Dataset: ${ind.dataset}`));
+          }
+          if (ind.credor_code) {
+            meta.appendChild(createMetaChip(`Credor: ${ind.credor_code}`));
+          }
+          if (ind.fmt) {
+            meta.appendChild(createMetaChip(`Formato: ${ind.fmt}`));
+          }
+          const actions = document.createElement('div');
+          actions.className = 'flex flex-wrap gap-2';
+          const viewBtn = document.createElement('button');
+          viewBtn.className = 'btn-primary';
+          viewBtn.textContent = 'Visualizar';
+          viewBtn.addEventListener('click', () => openView(ind));
+          const editBtn = document.createElement('button');
+          editBtn.className = 'btn';
+          editBtn.textContent = 'Editar';
+          editBtn.addEventListener('click', () => openCreate(ind));
+          const moveBtn = document.createElement('button');
+          moveBtn.className = 'btn';
+          moveBtn.textContent = 'Mover';
+          moveBtn.addEventListener('click', () => moveIndicator(ind));
+          const deleteBtn = document.createElement('button');
+          deleteBtn.className = 'btn text-rose-600 border-rose-200';
+          deleteBtn.textContent = 'Excluir';
+          deleteBtn.addEventListener('click', () => deleteIndicator(ind));
+          actions.append(viewBtn, editBtn, moveBtn, deleteBtn);
+          card.appendChild(actions);
+          els.indicatorList.appendChild(card);
+        });
+      }
+
+      function resetCreateForm() {
+        els.form.reset();
+        els.fieldFmt.value = '';
+        els.form.dataset.mode = 'create';
+        els.form.dataset.indId = '';
+        els.formMessage.textContent = '';
+        els.modalCreateTitle.textContent = 'Criar indicador';
+      }
+
+      async function openCreate(ind) {
+        if (!requireAuth()) return;
+        resetCreateForm();
+        if (ind) {
+          const resp = await fetch(api(`/indicators/${ind.id}`), { headers: authHeaders() });
+          if (!resp.ok) { alert('Nao foi possivel carregar o indicador.'); return; }
+          const full = await resp.json();
+          els.form.dataset.mode = 'edit';
+          els.form.dataset.indId = ind.id;
+          els.modalCreateTitle.textContent = 'Editar indicador';
+          els.fieldKey.value = full.key || '';
+          els.fieldName.value = full.name || '';
+          els.fieldCategory.value = full.category || '';
+          els.fieldDataset.value = full.dataset || '';
+          els.fieldCredor.value = full.credor_code || '';
+          els.fieldFmt.value = full.fmt || '';
+          els.fieldSql.value = full.formula_sql || '';
+        }
+        showModal(els.modalCreate);
+      }
+
+      async function saveIndicator(evt) {
+        evt.preventDefault();
+        if (!requireAuth()) return;
+        const payload = {
+          key: els.fieldKey.value.trim(),
+          name: els.fieldName.value.trim(),
+          category: els.fieldCategory.value.trim() || null,
+          dataset: els.fieldDataset.value.trim() || null,
+          credor_code: els.fieldCredor.value.trim() || null,
+          fmt: els.fieldFmt.value || null,
+          formula_sql: els.fieldSql.value
+        };
+        if (!payload.key || !payload.name || !payload.formula_sql) { els.formMessage.textContent = 'Preencha chave, nome e SQL.'; return; }
+        els.formMessage.textContent = 'Salvando...';
+        const resp = await fetch(api('/indicators'), {
+          method: 'POST',
+          headers: authHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify(payload)
+        });
+        if (!resp.ok) { els.formMessage.textContent = 'Erro ao salvar indicador.'; return; }
+        els.formMessage.textContent = 'Indicador salvo.';
+        await fetchIndicators();
+        renderTabs();
+        renderList();
+        setTimeout(() => hideModal(els.modalCreate), 300);
+      }
+
+      async function moveIndicator(ind) {
+        if (!requireAuth()) return;
+        const name = prompt('Mover para qual pasta?', ind.category || '');
+        if (name === null) return;
+        const resp = await fetch(api(`/indicators/${ind.id}/move`), {
+          method: 'POST',
+          headers: authHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify({ category: (name || '').trim() || null })
+        });
+        if (!resp.ok) { alert('Falha ao mover indicador.'); return; }
+        await fetchIndicators();
+        renderTabs();
+        renderList();
+      }
+
+      function openFolderModal(category) {
+        if (!requireAuth()) return;
+        closeActiveMenu();
+        const mode = category ? 'edit' : 'create';
+        els.modalFolderTitle.textContent = mode === 'edit' ? 'Editar pasta' : 'Nova pasta';
+        els.folderForm.dataset.mode = mode;
+        els.folderForm.dataset.originalName = category ? category.name : '';
+        els.folderForm.reset();
+        els.folderMessage.textContent = '';
+        els.folderName.value = category ? category.name : '';
+        const baseColor = category && category.color ? category.color : fallbackCategoryColor(category ? category.name : `Nova pasta ${state.categories.length + 1}`);
+        els.folderColor.value = baseColor;
+        showModal(els.modalFolder);
+        setTimeout(() => els.folderName.focus(), 50);
+      }
+
+      async function saveFolder(event) {
+        event.preventDefault();
+        if (!requireAuth()) return;
+        const mode = els.folderForm.dataset.mode || 'create';
+        const originalName = els.folderForm.dataset.originalName || '';
+        const name = els.folderName.value.trim();
+        const color = (els.folderColor.value || '').trim();
+        if (!name) {
+          els.folderMessage.textContent = 'Informe um nome.';
+          return;
+        }
+        els.folderMessage.textContent = 'Salvando...';
+        try {
+          let resp;
+          if (mode === 'edit') {
+            resp = await fetch(api(`/indicators/categories/${encodeURIComponent(originalName || name)}`), {
+              method: 'PATCH',
+              headers: authHeaders({ 'Content-Type': 'application/json' }),
+              body: JSON.stringify({ name, color: color || null })
+            });
+          } else {
+            resp = await fetch(api('/indicators/categories'), {
+              method: 'POST',
+              headers: authHeaders({ 'Content-Type': 'application/json' }),
+              body: JSON.stringify({ name, color: color || null })
+            });
+          }
+          if (!resp.ok) {
+            const txt = await resp.text();
+            els.folderMessage.textContent = 'Falha ao salvar pasta: ' + (txt || resp.status);
+            return;
+          }
+          els.folderMessage.textContent = mode === 'edit' ? 'Pasta atualizada.' : 'Pasta salva.';
+          if (mode === 'edit' && originalName && state.cat === originalName) {
+            state.cat = name;
+          }
+          if (mode !== 'edit') {
+            state.cat = name;
+          }
+          await fetchIndicators();
+          renderTabs();
+          renderList();
+          els.folderForm.dataset.mode = 'create';
+          els.folderForm.dataset.originalName = '';
+          setTimeout(() => hideModal(els.modalFolder), 200);
+        } catch (err) {
+          console.error('saveFolder', err);
+          els.folderMessage.textContent = 'Erro inesperado.';
+        }
+      }
+
+      async function deleteFolder(category) {
+        if (!requireAuth()) return;
+        const ok = confirm('Excluir a pasta "' + category.name + '"? Os indicadores ficarao sem pasta.');
+        if (!ok) return;
+        try {
+          const resp = await fetch(api(`/indicators/categories/${encodeURIComponent(category.name)}`), {
+            method: 'DELETE',
+            headers: authHeaders()
+          });
+          if (!resp.ok) {
+            const txt = await resp.text();
+            alert('Falha ao excluir pasta: ' + (txt || resp.status));
+            return;
+          }
+          if (state.cat === category.name) {
+            state.cat = null;
+          }
+          await fetchIndicators();
+          renderTabs();
+          renderList();
+        } catch (err) {
+          console.error('deleteFolder', err);
+          alert('Erro ao excluir pasta.');
+        }
+      }
+
+      function resetView(preserveCurrent = false) {
+        if (!preserveCurrent) {
+          current = null;
+          currentRows = [];
+          els.viewTitle.textContent = 'Indicador';
+          els.viewMeta.textContent = '';
+          els.viewFmt.value = 'auto';
+          els.runFrom.value = '';
+          els.runTo.value = '';
+          els.runCredor.value = '';
+          els.runUf.value = '';
+          els.runSituacao.value = '';
+          els.runDateField.value = DEFAULT_DATE_FIELD;
+        } else {
+          currentRows = [];
+        }
+        els.viewMessage.textContent = '';
+        if (chart) { chart.destroy(); chart = null; }
+        if (ech) { ech.dispose(); ech = null; }
+        if (els.mapContainer) { els.mapContainer.innerHTML = ''; }
+        hideElement(els.resultEmpty);
+        hideElement(els.resultKpi);
+        hideElement(els.resultChart);
+        hideElement(els.resultTable);
+        hideElement(els.resultMap);
+      }
+
+      function openView(ind) {
+        if (!requireAuth()) return;
+        setFullscreen(false);
+        current = ind;
+        els.viewTitle.textContent = ind?.name || '-';
+        const meta = [];
+        if (ind?.key) meta.push(`Chave: ${ind.key}`);
+        if (ind?.dataset) meta.push(`Dataset: ${ind.dataset}`);
+        if (ind?.category) meta.push(`Pasta: ${ind.category}`);
+        if (ind?.credor_code) meta.push(`Credor: ${ind.credor_code}`);
+        els.viewMeta.textContent = meta.join(' | ');
+        els.viewFmt.value = ind?.fmt || 'auto';
+        // Limpa filtros de execução para evitar reaproveitar valores antigos
+        els.runFrom.value = '';
+        els.runTo.value = '';
+        els.runCredor.value = '';
+        els.runUf.value = '';
+        els.runSituacao.value = '';
+        els.runDateField.value = DEFAULT_DATE_FIELD;
+        els.viewMessage.textContent = '';
+        showModal(els.modalView);
+        runIndicator().catch((err) => console.error('openView runIndicator', err));
+      }
+
+      function renderTable(rows) {
+        els.tableHead.innerHTML = '';
+        els.tableBody.innerHTML = '';
+        if (!rows || rows.length === 0) {
+          showElement(els.resultEmpty);
+          hideElement(els.resultTable);
+          return;
+        }
+        const cols = Object.keys(rows[0]);
+        els.tableHead.innerHTML = `<tr class="text-xs uppercase text-slate-500">${cols.map((c) => `<th class="px-3 py-2 border-b border-slate-200">${c}</th>`).join('')}</tr>`;
+        els.tableBody.innerHTML = rows.map((row) => `<tr>${cols.map((c) => `<td class="px-3 py-2 border-b border-slate-100">${formatCell(row[c])}</td>`).join('')}</tr>`).join('');
+        showElement(els.resultTable);
+      }
+
+      function formatCell(val) {
+        if (val === null || val === undefined) return '';
+        if (typeof val === 'number') return val.toLocaleString('pt-BR', { maximumFractionDigits: 2 });
+        return String(val);
+      }
+
+      function colorWithAlpha(hex, alpha) {
+        const clean = (hex || '').replace('#', '').trim();
+        if (clean.length !== 6) {
+          return `rgba(21,82,214, ${alpha})`;
+        }
+        const r = parseInt(clean.slice(0, 2), 16);
+        const g = parseInt(clean.slice(2, 4), 16);
+        const b = parseInt(clean.slice(4, 6), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      }
+
+      function prettifyKey(key) {
+        if (!key) return 'Valor';
+        return String(key)
+          .replace(/[_\-]+/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .replace(/\b\w/g, (c) => c.toUpperCase());
+      }
+
+      function renderChart(rows, fmt) {
+        if (chart) { chart.destroy(); chart = null; }
+        if (ech) { ech.dispose(); ech = null; }
+        const cols = Object.keys(rows[0] || {});
+        if (cols.length === 0) { showElement(els.resultEmpty); return; }
+        const labelCol = cols[0];
+        let numericCols = cols.filter((col) => rows.some((row) => typeof row[col] === 'number'));
+        if (numericCols.length === 0) {
+          showElement(els.resultEmpty);
+          return;
+        }
+        if (fmt === 'bar' && numericCols.length > 1) {
+          numericCols = [numericCols[0]];
+        }
+        const labels = rows.map((r) => String(r[labelCol]));
+        const preferLine = fmt === 'line';
+        const comboMode = fmt === 'combo';
+        const baseType = preferLine ? 'line' : 'bar';
+        const datasets = numericCols.map((col, idx) => {
+          const label = prettifyKey(col);
+          const data = rows.map((r) => Number(r[col] || 0));
+          const color = getCategoryColor(label);
+          let datasetType;
+          if (preferLine) {
+            datasetType = 'line';
+          } else if (comboMode) {
+            datasetType = idx === 0 ? 'bar' : 'line';
+          } else {
+            datasetType = 'bar';
+          }
+          const borderColor = color;
+          const backgroundColor = datasetType === 'line'
+            ? colorWithAlpha(color, 0.25)
+            : colorWithAlpha(color, 0.5);
+          return {
+            label,
+            data,
+            type: datasetType,
+            borderColor,
+            backgroundColor,
+            tension: datasetType === 'line' ? 0.25 : 0,
+            borderWidth: datasetType === 'line' ? 2 : 1,
+            fill: datasetType !== 'line',
+            order: datasetType === 'line' ? idx + 10 : idx
+          };
+        });
+        const height = computeResultHeight();
+        if (els.resultChart) { els.resultChart.style.height = `${height}px`; }
+        chart = new Chart(els.chartCanvas, {
+          type: baseType,
+          data: { labels, datasets },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            scales: { y: { beginAtZero: true } }
+          }
+        });
+        showElement(els.resultChart);
+        if (typeof chart.resize === 'function') {
+          try { chart.resize(); } catch (err) { console.error('chart resize', err); }
+        }
+      }
+
+      const UF_TO_NAME = {
+        AC: 'Acre', AL: 'Alagoas', AP: 'Amapá', AM: 'Amazonas', BA: 'Bahia', CE: 'Ceará', DF: 'Distrito Federal',
+        ES: 'Espírito Santo', GO: 'Goiás', MA: 'Maranhão', MT: 'Mato Grosso', MS: 'Mato Grosso do Sul',
+        MG: 'Minas Gerais', PA: 'Pará', PB: 'Paraíba', PR: 'Paraná', PE: 'Pernambuco', PI: 'Piauí',
+        RJ: 'Rio de Janeiro', RN: 'Rio Grande do Norte', RS: 'Rio Grande do Sul', RO: 'Rondônia',
+        RR: 'Roraima', SC: 'Santa Catarina', SP: 'São Paulo', SE: 'Sergipe', TO: 'Tocantins'
+      };
+
+      async function fetchBrazilGeoJSON() {
+        if (!brazilGeoPromise) {
+          const urls = [
+            '/app/data/brazil-states.geojson',
+            'https://cdn.jsdelivr.net/gh/codeforamerica/click_that_hood@main/public/data/brazil-states.geojson',
+            'https://fastly.jsdelivr.net/gh/codeforamerica/click_that_hood@main/public/data/brazil-states.geojson',
+            'https://geo.dataviz.cn/maps/geojson/brazil.json'
+          ];
+          brazilGeoPromise = (async () => {
+            let lastErr;
+            for (const url of urls) {
+              try {
+                const isRemote = url.startsWith('http') && typeof AbortController !== 'undefined';
+                const ctrl = isRemote ? new AbortController() : null;
+                const timeout = isRemote ? setTimeout(() => ctrl.abort(), 6000) : null;
+                const resp = await fetch(url, ctrl ? { signal: ctrl.signal } : undefined);
+                if (timeout) clearTimeout(timeout);
+                if (resp.ok) {
+                  return await resp.json();
+                }
+                lastErr = new Error(`Falha ao carregar ${url}: ${resp.status}`);
+              } catch (err) {
+                lastErr = err;
+              }
+            }
+            throw lastErr || new Error('GeoJSON do Brasil indisponível');
+          })().catch((err) => {
+            console.error('fetchBrazilGeoJSON', err);
+            brazilGeoPromise = null;
+            throw err;
+          });
+        }
+        return brazilGeoPromise;
+      }
+
+      async function renderBrazilMap(rows, title) {
+        if (!els.mapContainer) return;
+        if (chart) { chart.destroy(); chart = null; }
+        if (ech) { ech.dispose(); ech = null; }
+        const container = els.mapContainer;
+        container.innerHTML = '';
+        const data = [];
+        rows.forEach((row) => {
+          const uf = String(row.uf || row.UF || row.estado || '').trim().toUpperCase();
+          const name = UF_TO_NAME[uf];
+          if (!name) return;
+          const numericKey = Object.keys(row).find((k) => {
+            const lower = String(k).toLowerCase();
+            return !['uf', 'estado'].includes(lower) && typeof row[k] === 'number';
+          });
+          const rawValue = row.total ?? row.valor ?? row.valor_total ?? row.vl_titulo ?? row.value ?? row.receita ?? (numericKey ? row[numericKey] : undefined);
+          const value = Number(rawValue ?? 0);
+          if (!Number.isNaN(value)) data.push({ name, value });
+        });
+        if (data.length === 0) {
+          showElement(els.resultEmpty);
+          return;
+        }
+        try {
+          const height = computeResultHeight();
+          if (els.resultMap) { els.resultMap.style.height = `${height}px`; }
+          const geo = await fetchBrazilGeoJSON();
+          ech = echarts.init(container);
+          echarts.registerMap('BR', geo);
+          const maxVal = Math.max(...data.map((d) => d.value)) || 0;
+          ech.setOption({
+            title: { text: title || 'Mapa', left: 'center', textStyle: { fontSize: 14, fontWeight: 600 } },
+            tooltip: { trigger: 'item', formatter: '{b}: {c}' },
+            visualMap: {
+              type: 'continuous',
+              left: 'left',
+              min: 0,
+              max: maxVal,
+              text: ['Alto', 'Baixo'],
+              inRange: { color: ['#dbeafe', '#60a5fa', '#1e3a8a'] }
+            },
+            series: [{ type: 'map', map: 'BR', roam: true, data }]
+          });
+          setTimeout(() => { try { ech && ech.resize(); } catch (resizeErr) { console.error('resize map', resizeErr); } }, 50);
+        } catch (err) {
+          console.error('renderBrazilMap', err);
+          els.viewMessage.textContent = 'Mapa indisponível, exibindo gráfico.';
+          hideElement(els.resultEmpty);
+          renderChart(rows, 'bar');
+        }
+      }
+
+      function renderKpi(rows) {
+        const row = rows[0] || {};
+        const val = Object.values(row).find((v) => typeof v === 'number') || 0;
+        els.kpiValue.textContent = Number(val).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        showElement(els.resultKpi);
+      }
+
+      async function renderResult(rows, fmt) {
+        hideElement(els.resultEmpty);
+        hideElement(els.resultKpi);
+        hideElement(els.resultChart);
+        hideElement(els.resultTable);
+        hideElement(els.resultMap);
+        applyResultHeight();
+        if (els.mapContainer) { els.mapContainer.innerHTML = ''; }
+        if (chart) { chart.destroy(); chart = null; }
+        if (ech) { ech.dispose(); ech = null; }
+        if (!rows || rows.length === 0) {
+          showElement(els.resultEmpty);
+          return;
+        }
+        let format = fmt;
+        if (fmt === 'auto') {
+          format = current?.fmt || 'table';
+          if (!current?.fmt) {
+            const sample = rows[0];
+            const keys = Object.keys(sample);
+            const normalized = keys.map((k) => k.toLowerCase());
+            const numericCols = keys.filter((k) => typeof sample[k] === 'number');
+            if (numericCols.length === 0) format = 'table';
+            else if (keys.length === 1) format = 'kpi';
+            else if (normalized.includes('uf') || normalized.includes('estado')) format = 'map_br';
+            else if (keys.includes('ym')) format = 'line';
+            else format = 'bar';
+          }
+        }
+        if (format === 'kpi') { renderKpi(rows); return; }
+        if (format === 'map_br') {
+          showElement(els.resultMap);
+          await renderBrazilMap(rows, current?.name || 'Mapa por UF');
+          return;
+        }
+        if (format === 'bar' || format === 'line' || format === 'combo') { renderChart(rows, format); return; }
+        if (format === 'table') { renderTable(rows); return; }
+        renderChart(rows, 'bar');
+      }
+
+      async function runIndicator() {
+        if (!current) return;
+        if (!requireAuth()) return;
+        resetView(true);
+        els.viewMessage.textContent = 'Executando...';
+        const dateFieldValue = (els.runDateField.value || DEFAULT_DATE_FIELD || '').trim();
+        const payload = {
+          from_: els.runFrom.value || null,
+          to: els.runTo.value || null,
+          credor_code: els.runCredor.value || null,
+          uf: (els.runUf.value || '').toUpperCase() || null,
+          situacao_processo: els.runSituacao.value || null,
+          date_field: dateFieldValue || null
+        };
+        try {
+          const resp = await fetch(api(`/indicators/${current.id}/run`), {
+            method: 'POST',
+            headers: authHeaders({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify(payload)
+          });
+          if (!resp.ok) {
+            els.viewMessage.textContent = 'Falha ao executar indicador.';
+            return;
+          }
+          const data = await resp.json();
+          console.log('Resposta indicador', resp.status, data?.rows?.length);
+          currentRows = data.rows || [];
+          await renderResult(currentRows, els.viewFmt.value);
+          els.viewMessage.textContent = currentRows.length ? `Total de linhas: ${currentRows.length}` : 'Nenhum dado retornado.';
+        } catch (err) {
+          console.error('runIndicator', err);
+          els.viewMessage.textContent = 'Erro inesperado ao executar.';
+        }
+      }
+
+      async function rememberFormat() {
+        if (!current) return;
+        if (!requireAuth()) return;
+        const fmt = els.viewFmt.value === 'auto' ? (current.fmt || 'table') : els.viewFmt.value;
+        const resp = await fetch(api(`/indicators/${current.id}`), {
+          method: 'PATCH',
+          headers: authHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify({ fmt })
+        });
+        if (!resp.ok) { els.viewMessage.textContent = 'Falha ao salvar formato.'; return; }
+        els.viewMessage.textContent = 'Formato salvo.';
+        current.fmt = fmt;
+        await fetchIndicators();
+        renderTabs();
+        renderList();
+        await renderResult(currentRows, els.viewFmt.value);
+      }
+
+      async function deleteIndicator(indicator) {
+        const target = indicator || current;
+        if (!target) return;
+        if (!requireAuth()) return;
+        if (!confirm('Deseja excluir o indicador "' + target.name + '"?')) return;
+        const resp = await fetch(api('/indicators/' + target.id), { method: 'DELETE', headers: authHeaders() });
+        if (!resp.ok) {
+          const txt = await resp.text().catch(() => '');
+          const extra = txt ? ' ' + txt : '';
+          alert('Falha ao excluir indicador.' + extra);
+          return;
+        }
+        if (!indicator) {
+          hideModal(els.modalView);
+        }
+        await fetchIndicators();
+        renderTabs();
+        renderList();
+      }
+
+      function setupEvents() {
+        els.btnCreate.addEventListener('click', () => openCreate());
+        els.btnCreateFirst.addEventListener('click', () => openCreate());
+        $('modalCreateClose').addEventListener('click', () => hideModal(els.modalCreate));
+        $('btnCloseView').addEventListener('click', () => hideModal(els.modalView));
+        els.form.addEventListener('submit', saveIndicator);
+        els.searchInput.addEventListener('input', (e) => { state.search = e.target.value.trim().toLowerCase(); renderList(); });
+        els.credorFilter.addEventListener('input', (e) => { state.credor = e.target.value.trim().toLowerCase(); renderList(); });
+        els.btnNewFolder.addEventListener('click', openFolderModal);
+        els.btnLogout.addEventListener('click', () => {
+          localStorage.removeItem('token');
+          setAuthButtons();
+          state.indicators = [];
+          state.categories = [];
+          renderTabs();
+          renderList();
+          location.href = '/app/login.html?next=/app/indicators-fixed.html';
+        });
+        els.viewFmt.addEventListener('change', () => { renderResult(currentRows, els.viewFmt.value).catch((err) => console.error('renderResult change', err)); });
+        $('btnRun').addEventListener('click', runIndicator);
+        $('btnRememberFmt').addEventListener('click', rememberFormat);
+        $('btnEdit').addEventListener('click', () => { if (!current) return; hideModal(els.modalView); openCreate(current); });
+        $('btnDelete').addEventListener('click', deleteIndicator);
+        if (els.btnFullscreen) {
+          els.btnFullscreen.addEventListener('click', () => setFullscreen(!isViewFullscreen));
+        }
+        els.modalCreate.addEventListener('click', (e) => { if (e.target === els.modalCreate) hideModal(els.modalCreate); });
+        els.modalView.addEventListener('click', (e) => { if (e.target === els.modalView) hideModal(els.modalView); });
+        els.modalFolderClose.addEventListener('click', () => hideModal(els.modalFolder));
+        els.folderForm.addEventListener('submit', saveFolder);
+        els.modalFolder.addEventListener('click', (e) => { if (e.target === els.modalFolder) hideModal(els.modalFolder); });
+      }
+
+      async function init() {
+        setAuthButtons();
+        setupEvents();
+        if (hasToken()) {
+          await fetchIndicators();
+        }
+        renderTabs();
+        renderList();
+      }
+
+      window.addEventListener('resize', applyResultHeight);
+
+      init();
+    </script>
+  </body>
+</html>
