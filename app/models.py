@@ -32,6 +32,17 @@ class Membership(Base):
     role: Mapped[str] = mapped_column(String(20), default='Viewer')
 
 
+class IndicatorFolderPermission(Base):
+    __tablename__ = 'indicator_folder_permissions'
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    organization_id: Mapped[int] = mapped_column(Integer, index=True, nullable=False)
+    user_id: Mapped[int] = mapped_column(Integer, index=True, nullable=False)
+    folder: Mapped[str] = mapped_column(String(120), nullable=False)
+    can_edit: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
 class DataSource(Base):
     __tablename__ = 'data_sources'
 
