@@ -2,6 +2,7 @@ from __future__ import annotations
 from datetime import datetime, date
 from typing import Iterable, Dict, Any, List
 import math
+import re
 from typing import cast
 from dateutil import parser as dateparser
 from sqlalchemy.orm import Session
@@ -125,6 +126,11 @@ def _to_float(v):
     s = str(v).strip()
     if s.lower() in ("nan", "nat", "none", "null"):
         return None
+    # Remove stray characters (e.g., "MS", currency symbols) keeping only digits/sign separators
+    cleaned = re.sub(r"[^0-9,.\-]", "", s)
+    if not cleaned:
+        return None
+    s = cleaned
     try:
         return float(s.replace('.', '').replace(',', '.')) if (',' in s and s.count(',')==1 and '.' in s) else float(s.replace(',', '.'))
     except Exception:
@@ -142,6 +148,10 @@ def _to_int(v):
     s = str(v).strip()
     if s.lower() in ("nan", "nat", "none", "null"):
         return None
+    cleaned = re.sub(r"[^0-9.\-]", "", s)
+    if not cleaned:
+        return None
+    s = cleaned
     try:
         # remove separadores e converte
         s2 = s.replace('.', '').replace(',', '.')
