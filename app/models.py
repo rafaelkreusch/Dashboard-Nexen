@@ -70,6 +70,10 @@ class CuratedRecord(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     organization_id: Mapped[int] = mapped_column(Integer, index=True, nullable=False)
+    credor_code: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)
+    processo: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
+    devedor: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    cpf_cnpj: Mapped[str | None] = mapped_column(String(32), nullable=True, index=True)
     dt_cadastro: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     uf: Mapped[str | None] = mapped_column(String(4), nullable=True, index=True)
     faixa_vencimento: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
@@ -77,6 +81,16 @@ class CuratedRecord(Base):
     vl_titulo: Mapped[float | None] = mapped_column(Float, nullable=True)
     situacao_processo: Mapped[str | None] = mapped_column(String(100), nullable=True)
     vl_total_repasse: Mapped[float | None] = mapped_column(Float, nullable=True)
+    vl_saldo: Mapped[float | None] = mapped_column(Float, nullable=True)
+    dt_ultimo_credito: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    portador: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    motivo_devolucao: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    vl_honorario_devedor: Mapped[float | None] = mapped_column(Float, nullable=True)
+    vl_tx_contrato: Mapped[float | None] = mapped_column(Float, nullable=True)
+    comercial: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    cobrador: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    dt_encerrado: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    dias_vencidos_cadastro: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
