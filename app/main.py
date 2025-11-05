@@ -13,8 +13,8 @@ from app.routers import meta
 from app.routers import org as org_router
 from app.cron import init_scheduler
 
-# 👇 garante que todas as classes de modelo registrem no Base.metadata
-from app import models as _models  # <- IMPORTANTE
+# garante que todas as classes de modelo registrem no Base.metadata
+from app import models as _models  # IMPORTANTE
 
 app = FastAPI(title="SaaS Dashboards")
 
@@ -41,7 +41,7 @@ app.include_router(org_router.router)
 def on_startup():
     """
     1) Cria todas as tabelas declaradas (cobre `datasets` etc.)
-    2) Aplica DDLs opcionais por dialeto (Postgres/SQLite)
+    2) Aplica DDLs opcionais por dialeto (Postgres/SQLite) + fallback p/ datasets/indicators
     3) Inicia o scheduler
     """
     # 1) cria o schema base
@@ -51,6 +51,73 @@ def on_startup():
     try:
         dialect = engine.dialect.name  # "postgresql" | "sqlite" | ...
         with engine.begin() as conn:
+            # ----- Fallback: garantir datasets/indicators -----
+            if dialect == "postgresql":
+                create_datasets = """
+                CREATE TABLE IF NOT EXISTS datasets (
+                    id BIGSERIAL PRIMARY KEY,
+                    organization_id INTEGER NOT NULL,
+                    name VARCHAR(200) NOT NULL,
+                    description TEXT,
+                    query_sql TEXT,
+                    credor_code VARCHAR(50),
+                    created_at TIMESTAMP DEFAULT NOW()
+                );
+                """
+                create_indicators = """
+                CREATE TABLE IF NOT EXISTS indicators (
+                    id BIGSERIAL PRIMARY KEY,
+                    organization_id INTEGER NOT NULL,
+                    key VARCHAR(120) UNIQUE,
+                    name VARCHAR(200) NOT NULL,
+                    dataset VARCHAR(120),
+                    fmt VARCHAR(50),
+                    credor_code VARCHAR(50),
+                    created_at TIMESTAMP DEFAULT NOW()
+                );
+                """
+                create_idx = [
+                    "CREATE INDEX IF NOT EXISTS idx_datasets_org ON datasets (organization_id)",
+                    "CREATE INDEX IF NOT EXISTS idx_indicators_org ON indicators (organization_id)"
+                ]
+            else:  # sqlite
+                create_datasets = """
+                CREATE TABLE IF NOT EXISTS datasets (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    organization_id INTEGER NOT NULL,
+                    name VARCHAR(200) NOT NULL,
+                    description TEXT,
+                    query_sql TEXT,
+                    credor_code VARCHAR(50),
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                );
+                """
+                create_indicators = """
+                CREATE TABLE IF NOT EXISTS indicators (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    organization_id INTEGER NOT NULL,
+                    key VARCHAR(120) UNIQUE,
+                    name VARCHAR(200) NOT NULL,
+                    dataset VARCHAR(120),
+                    fmt VARCHAR(50),
+                    credor_code VARCHAR(50),
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                );
+                """
+                create_idx = [
+                    "CREATE INDEX IF NOT EXISTS idx_datasets_org ON datasets (organization_id)",
+                    "CREATE INDEX IF NOT EXISTS idx_indicators_org ON indicators (organization_id)"
+                ]
+
+            try: conn.execute(text(create_datasets))
+            except Exception: pass
+            try: conn.execute(text(create_indicators))
+            except Exception: pass
+            for sql in create_idx:
+                try: conn.execute(text(sql))
+                except Exception: pass
+
+            # ----- Colunas extras em curated_records -----
             for ddl in [
                 "ALTER TABLE curated_records ADD COLUMN devedor VARCHAR(200)",
                 "ALTER TABLE curated_records ADD COLUMN cpf_cnpj VARCHAR(32)",
@@ -82,11 +149,13 @@ def on_startup():
                     try: conn.execute(text(ddl))
                     except Exception: pass
 
+            # ----- Coluna credor_code em datasets/indicators (idempotente) -----
             try: conn.execute(text("ALTER TABLE datasets ADD COLUMN credor_code VARCHAR(50)"))
             except Exception: pass
             try: conn.execute(text("ALTER TABLE indicators ADD COLUMN credor_code VARCHAR(50)"))
             except Exception: pass
 
+            # ----- Tabela de categorias -----
             if dialect == "postgresql":
                 create_cat = """
                 CREATE TABLE IF NOT EXISTS indicator_categories (
@@ -95,7 +164,7 @@ def on_startup():
                     name VARCHAR(200) NOT NULL,
                     color VARCHAR(7),
                     UNIQUE(organization_id, name)
-                )
+                );
                 """
             else:
                 create_cat = """
@@ -105,13 +174,15 @@ def on_startup():
                     name VARCHAR(200) NOT NULL,
                     color VARCHAR(7),
                     UNIQUE(organization_id, name)
-                )
+                );
                 """
             try: conn.execute(text(create_cat))
             except Exception: pass
             try: conn.execute(text("ALTER TABLE indicator_categories ADD COLUMN color VARCHAR(7)"))
             except Exception: pass
+
     except Exception:
+        # nunca derruba o app no startup por DDL opcional
         pass
 
     # 3) scheduler
@@ -125,6 +196,7 @@ def root():
 def app_home_redirect():
     return RedirectResponse(url="/app/index2.html")
 
+# Compatibilidade
 @app.get("/app/indicators.html")
 def redirect_indicators():
     return RedirectResponse(url="/app/indicators-fixed.html")
