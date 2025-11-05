@@ -16,6 +16,8 @@ APScheduler
 google-auth
 google-auth-oauthlib
 gspread
+gunicorn
+pandas
 # Optional drivers (install as needed):
 # pymysql
 # pyodbc
